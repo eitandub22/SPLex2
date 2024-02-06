@@ -115,9 +115,9 @@ public class Table {
      * @param slot   - the slot on which to place the token.
      */
     public void placeToken(int player, int slot) {
-        // TODO implement
+        this.env.ui.placeToken(player, slot);
     }
-
+ 
     /**
      * Removes a token of a player from a grid slot.
      * @param player - the player the token belongs to.
@@ -125,7 +125,7 @@ public class Table {
      * @return       - true iff a token was successfully removed.
      */
     public boolean removeToken(int player, int slot) {
-        // TODO implement
-        return false;
+        this.env.ui.removeToken(player, slot); //TODO returns bool? wtf how to check
+        return true;
     }
 }
