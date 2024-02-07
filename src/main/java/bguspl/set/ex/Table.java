@@ -3,6 +3,7 @@ package bguspl.set.ex;
 import bguspl.set.Env;
 
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -28,6 +29,14 @@ public class Table {
      * Mapping between a card and the slot it is in (null if none).
      */
     protected final Integer[] cardToSlot; // slot per card (if any)
+    /** 
+     * ID of players with token in each cell
+    */
+    protected final List<Integer>[] tokens;
+    /**
+     * Lock for slotToCard and cardToSlot
+     */
+    private final Object cardsLock;
 
     /**
      * Constructor for testing.
@@ -41,6 +50,11 @@ public class Table {
         this.env = env;
         this.slotToCard = slotToCard;
         this.cardToSlot = cardToSlot;
+        this.cardsLock = new Object();
+        this.tokens = new LinkedList[env.config.rows*env.config.columns];
+        for(int i = 0; i < this.tokens.length; i++){
+            this.tokens[i] = new LinkedList<Integer>();
+        }
     }
 
     /**
@@ -57,13 +71,15 @@ public class Table {
      * This method prints all possible legal sets of cards that are currently on the table.
      */
     public void hints() {
-        List<Integer> deck = Arrays.stream(slotToCard).filter(Objects::nonNull).collect(Collectors.toList());
-        env.util.findSets(deck, Integer.MAX_VALUE).forEach(set -> {
-            StringBuilder sb = new StringBuilder().append("Hint: Set found: ");
-            List<Integer> slots = Arrays.stream(set).mapToObj(card -> cardToSlot[card]).sorted().collect(Collectors.toList());
-            int[][] features = env.util.cardsToFeatures(set);
-            System.out.println(sb.append("slots: ").append(slots).append(" features: ").append(Arrays.deepToString(features)));
-        });
+        synchronized(cardsLock){
+            List<Integer> deck = Arrays.stream(slotToCard).filter(Objects::nonNull).collect(Collectors.toList());
+            env.util.findSets(deck, Integer.MAX_VALUE).forEach(set -> {
+                StringBuilder sb = new StringBuilder().append("Hint: Set found: ");
+                List<Integer> slots = Arrays.stream(set).mapToObj(card -> cardToSlot[card]).sorted().collect(Collectors.toList());
+                int[][] features = env.util.cardsToFeatures(set);
+                System.out.println(sb.append("slots: ").append(slots).append(" features: ").append(Arrays.deepToString(features)));
+            });
+        }
     }
 
     /**
@@ -73,9 +89,11 @@ public class Table {
      */
     public int countCards() {
         int cards = 0;
-        for (Integer card : slotToCard)
-            if (card != null)
-                ++cards;
+        synchronized(cardsLock){
+            for (Integer card : slotToCard)
+                if (card != null)
+                    ++cards;
+        }
         return cards;
     }
 
@@ -91,10 +109,14 @@ public class Table {
             Thread.sleep(env.config.tableDelayMillis);
         } catch (InterruptedException ignored) {}
 
-        cardToSlot[card] = slot;
-        slotToCard[slot] = card;
+        synchronized(cardsLock){
+            cardToSlot[card] = slot;
+            slotToCard[slot] = card;
+        }
 
-        env.ui.placeCard(card, slot);
+        synchronized(this.env.ui){
+            env.ui.placeCard(card, slot);
+        }
     }
 
     /**
@@ -106,8 +128,14 @@ public class Table {
             Thread.sleep(env.config.tableDelayMillis);
         } catch (InterruptedException ignored) {}
 
-        slotToCard[slot] = null;
-        env.ui.removeCard(slot);
+        synchronized(cardsLock){
+            cardToSlot[slotToCard[slot]] = null;
+            slotToCard[slot] = null;
+        }
+        
+        synchronized(this.env.ui){
+            env.ui.removeCard(slot);
+        }
     }
 
     /**
@@ -116,7 +144,13 @@ public class Table {
      * @param slot   - the slot on which to place the token.
      */
     public void placeToken(int player, int slot) {
-        this.env.ui.placeToken(player, slot);
+        synchronized(this.tokens){
+            this.tokens[slot].add(player);
+        }
+
+        synchronized(this.env.ui){
+            this.env.ui.placeToken(player, slot);
+        }
     }
  
     /**
@@ -126,7 +160,15 @@ public class Table {
      * @return       - true iff a token was successfully removed.
      */
     public boolean removeToken(int player, int slot) {
-        this.env.ui.removeToken(player, slot); //TODO returns bool? wtf how to check
+        synchronized(this.tokens){
+            int index = this.tokens[slot].indexOf(player);
+            if(index == -1) return false;
+            this.tokens[slot].remove(index);
+        }
+
+        synchronized(this.env.ui){
+            this.env.ui.removeToken(player, slot);
+        }
         return true;
     }
 }
