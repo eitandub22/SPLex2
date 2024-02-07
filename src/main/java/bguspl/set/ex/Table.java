@@ -2,6 +2,7 @@ package bguspl.set.ex;
 
 import bguspl.set.Env;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -32,7 +33,7 @@ public class Table {
     /** 
      * ID of players with token in each cell
     */
-    protected final List<Integer>[] tokens;
+    protected final List<List<Integer>> tokens;
     /**
      * Lock for slotToCard and cardToSlot
      */
@@ -51,9 +52,9 @@ public class Table {
         this.slotToCard = slotToCard;
         this.cardToSlot = cardToSlot;
         this.cardsLock = new Object();
-        this.tokens = new LinkedList[env.config.rows*env.config.columns];
-        for(int i = 0; i < this.tokens.length; i++){
-            this.tokens[i] = new LinkedList<Integer>();
+        this.tokens = new ArrayList<List<Integer>>(env.config.rows*env.config.columns);
+        for(int i = 0; i < env.config.rows*env.config.columns; i++){
+            this.tokens.add(new LinkedList<Integer>());
         }
     }
 
@@ -145,7 +146,7 @@ public class Table {
      */
     public void placeToken(int player, int slot) {
         synchronized(this.tokens){
-            this.tokens[slot].add(player);
+            this.tokens.get(slot).add(player);
         }
 
         synchronized(this.env.ui){
@@ -161,9 +162,9 @@ public class Table {
      */
     public boolean removeToken(int player, int slot) {
         synchronized(this.tokens){
-            int index = this.tokens[slot].indexOf(player);
+            int index = this.tokens.get(slot).indexOf(player);
             if(index == -1) return false;
-            this.tokens[slot].remove(index);
+            this.tokens.get(slot).remove(index);
         }
 
         synchronized(this.env.ui){
