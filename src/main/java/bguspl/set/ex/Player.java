@@ -97,14 +97,10 @@ public class Player implements Runnable {
         if (!human) createArtificialIntelligence();
 
         while (!terminate) {
-<<<<<<< HEAD
-            //TODO implement
-=======
             if(this.keyQueue.size() == 0) continue;
 
             int currKey = this.keyQueue.remove();
             if(!this.table.removeToken(this.id, currKey)) this.table.placeToken(this.id, currKey);
->>>>>>> Table
         }
         if (!human) try { aiThread.join(); } catch (InterruptedException ignored) {}
         env.logger.info("thread " + Thread.currentThread().getName() + " terminated.");
