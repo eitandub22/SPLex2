@@ -2,6 +2,9 @@ package bguspl.set.ex;
 
 import bguspl.set.Env;
 
+import java.util.LinkedList;
+import java.util.Queue;
+
 /**
  * This class manages the players' threads and data
  *
@@ -51,6 +54,11 @@ public class Player implements Runnable {
     private int score;
 
     /**
+     * Queue of keys pressed.
+     */
+    private Queue<Integer> keyQueue;
+
+    /**
      * The class constructor.
      *
      * @param env    - the environment object.
@@ -64,6 +72,7 @@ public class Player implements Runnable {
         this.table = table;
         this.id = id;
         this.human = human;
+        this.keyQueue = new LinkedList<Integer>();
     }
 
     /**
@@ -76,10 +85,11 @@ public class Player implements Runnable {
         if (!human) createArtificialIntelligence();
 
         while (!terminate) {
-            // TODO implement main player loop
+            //TODO implement
         }
         if (!human) try { aiThread.join(); } catch (InterruptedException ignored) {}
         env.logger.info("thread " + Thread.currentThread().getName() + " terminated.");
+        terminate();
     }
 
     /**
@@ -114,6 +124,8 @@ public class Player implements Runnable {
      * @param slot - the slot corresponding to the key pressed.
      */
     public void keyPressed(int slot) {
+        this.keyQueue.add(slot);
+        
         // TODO implement
     }
 
