@@ -4,7 +4,10 @@ import bguspl.set.Env;
 
 import java.util.LinkedList;
 import java.util.Queue;
+<<<<<<< HEAD
 
+=======
+>>>>>>> Table
 /**
  * This class manages the players' threads and data
  *
@@ -57,6 +60,15 @@ public class Player implements Runnable {
      * Queue of keys pressed.
      */
     private Queue<Integer> keyQueue;
+<<<<<<< HEAD
+=======
+    
+    /**
+     * Size of a set
+     */
+    public static final int SET_SIZE = 3;
+
+>>>>>>> Table
 
     /**
      * The class constructor.
@@ -85,7 +97,14 @@ public class Player implements Runnable {
         if (!human) createArtificialIntelligence();
 
         while (!terminate) {
+<<<<<<< HEAD
             //TODO implement
+=======
+            if(this.keyQueue.size() == 0) continue;
+
+            int currKey = this.keyQueue.remove();
+            if(!this.table.removeToken(this.id, currKey)) this.table.placeToken(this.id, currKey);
+>>>>>>> Table
         }
         if (!human) try { aiThread.join(); } catch (InterruptedException ignored) {}
         env.logger.info("thread " + Thread.currentThread().getName() + " terminated.");
@@ -125,7 +144,9 @@ public class Player implements Runnable {
      */
     public void keyPressed(int slot) {
         this.keyQueue.add(slot);
-        
+        if(this.keyQueue.size() >= SET_SIZE){
+            
+        }
         // TODO implement
     }
 
