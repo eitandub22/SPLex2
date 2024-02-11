@@ -4,10 +4,6 @@ import bguspl.set.Env;
 
 import java.util.LinkedList;
 import java.util.Queue;
-<<<<<<< HEAD
-
-=======
->>>>>>> Table
 /**
  * This class manages the players' threads and data
  *
@@ -60,15 +56,12 @@ public class Player implements Runnable {
      * Queue of keys pressed.
      */
     private Queue<Integer> keyQueue;
-<<<<<<< HEAD
-=======
     
     /**
      * Size of a set
      */
     public static final int SET_SIZE = 3;
 
->>>>>>> Table
 
     /**
      * The class constructor.
