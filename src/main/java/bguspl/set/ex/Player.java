@@ -4,6 +4,7 @@ import bguspl.set.Env;
 
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.Random;
 /**
  * This class manages the players' threads and data
  *
@@ -61,11 +62,8 @@ public class Player implements Runnable {
      * Queue of keys pressed.
      */
     private Queue<Integer> keyQueue;
-    
-    /**
-     * Size of a set
-     */
-    public static final int SET_SIZE = 3;
+
+    private Queue<Integer> tokenQueue;
 
 
     /**
@@ -83,23 +81,38 @@ public class Player implements Runnable {
         this.id = id;
         this.human = human;
         this.keyQueue = new LinkedList<Integer>();
-        this.dealer = dealer
+        this.dealer = dealer;
     }
 
     /**
      * The main player thread of each player starts here (main loop for the player thread).
      */
     @Override
-    public void run() {
+    public void run(){
         playerThread = Thread.currentThread();
         env.logger.info("thread " + Thread.currentThread().getName() + " starting.");
         if (!human) createArtificialIntelligence();
 
+        int currKey = 0;
         while (!terminate) {
-            if(this.keyQueue.size() == 0) continue;
-
-            int currKey = this.keyQueue.remove();
+            synchronized(keyQueue){
+                while(this.keyQueue.size() == 0){
+                    try{
+                        keyQueue.wait();
+                    }catch(InterruptedException egnored){}                    
+                }
+                currKey = this.keyQueue.remove();
+            }
+            
+            tokenQueue.add(currKey);
             if(!this.table.removeToken(this.id, currKey)) this.table.placeToken(this.id, currKey);
+
+            if(tokenQueue.size() >= 3){
+                this.dealer.notifyAll();//TODO implement
+                while(tokenQueue.size() > 0){
+                    this.table.removeToken(this.id, tokenQueue.remove());
+                }
+            }
         }
         if (!human) try { aiThread.join(); } catch (InterruptedException ignored) {}
         env.logger.info("thread " + Thread.currentThread().getName() + " terminated.");
@@ -115,7 +128,10 @@ public class Player implements Runnable {
         aiThread = new Thread(() -> {
             env.logger.info("thread " + Thread.currentThread().getName() + " starting.");
             while (!terminate) {
-                // TODO implement player key press simulator
+                java.util.Random rnd = new java.util.Random();
+                while (this.tokenQueue.size() < 3) {
+                    keyPressed(rnd.nextInt(this.env.config.columns * this.env.config.rows));
+                }
                 try {
                     synchronized (this) { wait(); }
                 } catch (InterruptedException ignored) {}
@@ -129,7 +145,7 @@ public class Player implements Runnable {
      * Called when the game should be terminated.
      */
     public void terminate() {
-        // TODO implement
+        this.terminate = true;
     }
 
     /**
@@ -138,11 +154,9 @@ public class Player implements Runnable {
      * @param slot - the slot corresponding to the key pressed.
      */
     public void keyPressed(int slot) {
-        this.keyQueue.add(slot);
-        if(this.keyQueue.size() >= SET_SIZE){
-            
+        synchronized(this.keyQueue){
+            this.keyQueue.add(slot);
         }
-        // TODO implement
     }
 
     /**
@@ -152,17 +166,30 @@ public class Player implements Runnable {
      * @post - the player's score is updated in the ui.
      */
     public void point() {
-        // TODO implement
-
         int ignored = table.countCards(); // this part is just for demonstration in the unit tests
         env.ui.setScore(id, ++score);
+        this.score++;
+
+        while(!this.tokenQueue.isEmpty()){
+            this.tokenQueue.remove();
+        }
+
+        try{
+            playerThread.sleep(this.env.config.pointFreezeMillis);
+        }catch(InterruptedException egnored){}
     }
 
     /**
      * Penalize a player and perform other related actions.
      */
     public void penalty() {
-        // TODO implement
+        while(!this.tokenQueue.isEmpty()){
+            this.tokenQueue.remove();
+        }
+
+        try{
+            playerThread.sleep(this.env.config.penaltyFreezeMillis);
+        }catch(InterruptedException egnored){}
     }
 
     public int score() {
