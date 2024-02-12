@@ -51,6 +51,11 @@ public class Player implements Runnable {
      * The current score of the player.
      */
     private int score;
+    
+    /**
+     * The game dealer
+     */
+    private Dealer dealer;
 
     /**
      * Queue of keys pressed.
@@ -78,6 +83,7 @@ public class Player implements Runnable {
         this.id = id;
         this.human = human;
         this.keyQueue = new LinkedList<Integer>();
+        this.dealer = dealer
     }
 
     /**
