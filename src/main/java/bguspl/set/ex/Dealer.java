@@ -1,6 +1,7 @@
 package bguspl.set.ex;
 
 import bguspl.set.Env;
+import bguspl.set.ThreadLogger;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -51,6 +52,10 @@ public class Dealer implements Runnable {
     @Override
     public void run() {
         env.logger.info("thread " + Thread.currentThread().getName() + " starting.");
+        for(Player player : players){
+            ThreadLogger playerThread = new ThreadLogger(player, Integer.toString(player.id), env.logger);
+            playerThread.startWithLog();
+        }
         while (!shouldFinish()) {
             placeCardsOnTable();
             timerLoop();
@@ -101,6 +106,7 @@ public class Dealer implements Runnable {
      */
     private void placeCardsOnTable() {
         // TODO implement
+        
     }
 
     /**
