@@ -182,6 +182,8 @@ public class Table {
     }
 
     public int getCardFromSlot(int slot){
-        return slotToCard[slot];
+        synchronized (cardsLock){
+            return slotToCard[slot];
+        }
     }
 }
