@@ -3,6 +3,7 @@ package bguspl.set.ex;
 import bguspl.set.Env;
 import bguspl.set.ThreadLogger;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -38,6 +39,7 @@ public class Dealer implements Runnable {
      */
     private long reshuffleTime = Long.MAX_VALUE;
 
+    private final int timerMaxTime = 60000;
     public Dealer(Env env, Table table, Player[] players) {
         this.env = env;
         this.table = table;
@@ -106,7 +108,8 @@ public class Dealer implements Runnable {
      */
     private void placeCardsOnTable() {
         // TODO implement
-        
+        List<Integer> spots = table.getEmptySlots();
+
     }
 
     /**
@@ -120,7 +123,12 @@ public class Dealer implements Runnable {
      * Reset and/or update the countdown and the countdown display.
      */
     private void updateTimerDisplay(boolean reset) {
-        // TODO implement
+        if(reset){
+            env.ui.setCountdown(timerMaxTime, false);
+        }
+        /*else{ just update so it goes down by one each second
+            env.ui.setCountdown(timerMaxTime, false);
+        }*/
     }
 
     /**
@@ -129,8 +137,11 @@ public class Dealer implements Runnable {
     private void removeAllCardsFromTable() {
         int slotsNum = env.config.columns * env.config.rows;
         for(int i = 0; i < slotsNum; i++){
-            //deck.add(table.getCardFromSlot(i));
-            table.removeCard(i);
+            synchronized (table){
+                deck.add(table.getCardFromSlot(i));
+                table.removeCard(i);
+            }
+            env.ui.removeCard(i);
         }
     }
 
@@ -138,6 +149,18 @@ public class Dealer implements Runnable {
      * Check who is/are the winner/s and displays them.
      */
     private void announceWinners() {
-        // TODO implement
+        int maxScore = -1;
+        List<Integer> winners = new ArrayList<>();
+        for (Player p : players){
+            if(p.score() > maxScore) maxScore = p.score();
+        }
+        for (Player p : players){
+            if(p.score() == maxScore) winners.add(p.id);
+        }
+        int[] winnersArr = new int[winners.size()];
+        for(int i = 0; i < winners.size(); i++){
+            winnersArr[i] = winners.get(i);
+        }
+        env.ui.announceWinner(winnersArr);
     }
 }
