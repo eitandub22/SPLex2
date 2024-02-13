@@ -180,4 +180,8 @@ public class Table {
         }
         return emptySlots;
     }
+
+    public int getCardFromSlot(int slot){
+        return slotToCard[slot];
+    }
 }
