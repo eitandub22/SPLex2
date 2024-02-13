@@ -41,6 +41,7 @@ public class Dealer implements Runnable {
         this.env = env;
         this.table = table;
         this.players = players;
+        this.terminate = false;
         deck = IntStream.range(0, env.config.deckSize).boxed().collect(Collectors.toList());
     }
 
@@ -120,7 +121,11 @@ public class Dealer implements Runnable {
      * Returns all the cards from the table to the deck.
      */
     private void removeAllCardsFromTable() {
-        // TODO implement
+        int slotsNum = env.config.columns * env.config.rows;
+        for(int i = 0; i < slotsNum; i++){
+            //deck.add(table.getCardFromSlot(i));
+            table.removeCard(i);
+        }
     }
 
     /**
