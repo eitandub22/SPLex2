@@ -63,8 +63,11 @@ public class Player implements Runnable {
      */
     private Queue<Integer> keyQueue;
 
-    private Queue<Integer> tokenQueue;
-
+    /**
+     * Number of tokens on the table
+     */
+    private int tokensPlaced;
+    
 
     /**
      * The class constructor.
@@ -94,29 +97,36 @@ public class Player implements Runnable {
         if (!human) createArtificialIntelligence();
 
         int currKey = 0;
+        boolean removedToken = false;
         while (!terminate) {
             synchronized(keyQueue){
-                while(this.keyQueue.size() == 0){
+                while(this.keyQueue.size() == 0 && !terminate){
                     try{
-                        keyQueue.wait();
-                    }catch(InterruptedException egnored){}                    
+                        this.keyQueue.wait();
+                    }catch(InterruptedException e){}                    
                 }
                 currKey = this.keyQueue.remove();
+                this.keyQueue.notifyAll();
             }
-            
-            tokenQueue.add(currKey);
-            if(!this.table.removeToken(this.id, currKey)) this.table.placeToken(this.id, currKey);
+            if(!terminate) continue;
 
-            if(tokenQueue.size() >= 3){
-                this.dealer.notifyAll();//TODO implement
-                while(tokenQueue.size() > 0){
-                    this.table.removeToken(this.id, tokenQueue.remove());
-                }
+            removedToken = this.table.removeToken(this.id, currKey);
+            if(!removedToken && tokensPlaced < 3){
+                this.table.placeToken(this.id, currKey);
+                tokensPlaced++;
             }
+            else if(removedToken) tokensPlaced--;
+
+            if(tokensPlaced >= 3){
+                this.dealer.notifyAll();
+                try{
+                    this.wait();
+                }catch(InterruptedException egnored){continue;}
+            }
+
         }
         if (!human) try { aiThread.join(); } catch (InterruptedException ignored) {}
         env.logger.info("thread " + Thread.currentThread().getName() + " terminated.");
-        terminate();
     }
 
     /**
@@ -127,14 +137,12 @@ public class Player implements Runnable {
         // note: this is a very, very smart AI (!)
         aiThread = new Thread(() -> {
             env.logger.info("thread " + Thread.currentThread().getName() + " starting.");
+            Random rnd = new java.util.Random();
             while (!terminate) {
-                java.util.Random rnd = new java.util.Random();
-                while (this.tokenQueue.size() < 3) {
-                    keyPressed(rnd.nextInt(this.env.config.columns * this.env.config.rows));
-                }
+                keyPressed(rnd.nextInt(this.env.config.columns * this.env.config.rows));
                 try {
-                    synchronized (this) { wait(); }
-                } catch (InterruptedException ignored) {}
+                    Thread.sleep(1000); // thats a very *smart* ai not a very *fast* one, slow down
+                } catch (InterruptedException ignored) {continue;}
             }
             env.logger.info("thread " + Thread.currentThread().getName() + " terminated.");
         }, "computer-" + id);
@@ -146,6 +154,8 @@ public class Player implements Runnable {
      */
     public void terminate() {
         this.terminate = true;
+        if(!human) aiThread.interrupt();
+        playerThread.interrupt();
     }
 
     /**
@@ -155,7 +165,13 @@ public class Player implements Runnable {
      */
     public void keyPressed(int slot) {
         synchronized(this.keyQueue){
+            while(this.keyQueue.size() >= 3){
+                try{
+                    this.keyQueue.wait();
+                }catch(InterruptedException egnored){}
+            }
             this.keyQueue.add(slot);
+            this.keyQueue.notifyAll();
         }
     }
 
@@ -168,28 +184,29 @@ public class Player implements Runnable {
     public void point() {
         int ignored = table.countCards(); // this part is just for demonstration in the unit tests
         env.ui.setScore(id, ++score);
-        this.score++;
-
-        while(!this.tokenQueue.isEmpty()){
-            this.tokenQueue.remove();
-        }
 
         try{
             playerThread.sleep(this.env.config.pointFreezeMillis);
         }catch(InterruptedException egnored){}
+
+        synchronized(this.keyQueue){
+            this.keyQueue.clear(); 
+            this.keyQueue.notifyAll();//TODO wll wake up thread for no reason, should be fixed
+        }
     }
 
     /**
      * Penalize a player and perform other related actions.
      */
     public void penalty() {
-        while(!this.tokenQueue.isEmpty()){
-            this.tokenQueue.remove();
-        }
-
         try{
             playerThread.sleep(this.env.config.penaltyFreezeMillis);
         }catch(InterruptedException egnored){}
+
+        synchronized(this.keyQueue){
+            this.keyQueue.clear();
+            this.keyQueue.notifyAll();//TODO wll wake up thread for no reason, should be fixed
+        }
     }
 
     public int score() {
