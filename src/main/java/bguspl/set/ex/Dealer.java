@@ -41,11 +41,14 @@ public class Dealer implements Runnable {
     private long reshuffleTime = Long.MAX_VALUE;
 
     private final long timerMaxTime = 60000;
+
+    private long timerValue;
     public Dealer(Env env, Table table, Player[] players) {
         this.env = env;
         this.table = table;
         this.players = players;
         this.terminate = false;
+        this.timerValue = timerMaxTime;
         deck = IntStream.range(0, env.config.deckSize).boxed().collect(Collectors.toList());
     }
 
@@ -127,9 +130,10 @@ public class Dealer implements Runnable {
         if(reset){
             env.ui.setCountdown(timerMaxTime, false);
         }
-        /*else{ update so it goes down by one second
-            env.ui.setCountdown(timerMaxTime, false);
-        }*/
+        else{
+            timerValue -= 1000;
+            env.ui.setCountdown(timerValue, false);
+        }
     }
 
     /**
