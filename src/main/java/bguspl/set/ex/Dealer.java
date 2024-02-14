@@ -4,6 +4,7 @@ import bguspl.set.Env;
 import bguspl.set.ThreadLogger;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -39,7 +40,7 @@ public class Dealer implements Runnable {
      */
     private long reshuffleTime = Long.MAX_VALUE;
 
-    private final int timerMaxTime = 60000;
+    private final long timerMaxTime = 60000;
     public Dealer(Env env, Table table, Player[] players) {
         this.env = env;
         this.table = table;
@@ -97,7 +98,7 @@ public class Dealer implements Runnable {
     }
 
     /**
-     * Checks cards should be removed from the table and removes them.
+     * Checks cards should be removed (a set) from the table and removes them.
      */
     private void removeCardsFromTable() {
         // TODO implement
@@ -126,7 +127,7 @@ public class Dealer implements Runnable {
         if(reset){
             env.ui.setCountdown(timerMaxTime, false);
         }
-        /*else{ just update so it goes down by one each second
+        /*else{ update so it goes down by one second
             env.ui.setCountdown(timerMaxTime, false);
         }*/
     }
@@ -136,13 +137,19 @@ public class Dealer implements Runnable {
      */
     private void removeAllCardsFromTable() {
         int slotsNum = env.config.columns * env.config.rows;
-        for(int i = 0; i < slotsNum; i++){
-            synchronized (table){
+        synchronized (table) {
+            for (int i = 0; i < slotsNum; i++) {
                 deck.add(table.getCardFromSlot(i));
                 table.removeCard(i);
             }
-            env.ui.removeCard(i);
+            //removeAllTokens(); TODO implement
         }
+        synchronized (env.ui){
+            for (int i = 0; i < slotsNum; i++) {
+                env.ui.removeCard(i);
+            }
+        }
+        Collections.shuffle(deck);
     }
 
     /**
