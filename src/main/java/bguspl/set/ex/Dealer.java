@@ -5,6 +5,7 @@ import bguspl.set.ThreadLogger;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -63,6 +64,7 @@ public class Dealer implements Runnable {
             playerThread.startWithLog();
         }
         while (!shouldFinish()) {
+            Collections.shuffle(deck);
             placeCardsOnTable();
             timerLoop();
             updateTimerDisplay(false);
@@ -111,9 +113,11 @@ public class Dealer implements Runnable {
      * Check if any cards can be removed from the deck and placed on the table.
      */
     private void placeCardsOnTable() {
-        // TODO implement
         List<Integer> spots = table.getEmptySlots();
-
+        Iterator<Integer> cards = deck.iterator();
+        for(Integer spot : spots){
+            table.placeCard(cards.next(), spot);
+        }
     }
 
     /**
@@ -132,6 +136,9 @@ public class Dealer implements Runnable {
         }
         else{
             timerValue -= 1000;
+            try{
+                Thread.sleep(1000);
+            } catch (InterruptedException ignored) {}
             env.ui.setCountdown(timerValue, false);
         }
     }
