@@ -107,11 +107,11 @@ public class Player implements Runnable {
                 }
                 currKey = this.keyQueue.remove();
                 this.keyQueue.notifyAll();
+                if(!human) synchronized(this){this.notifyAll();}
             }
             if(!terminate) continue;
 
             removedToken = this.table.removeToken(this.id, currKey);
-            if(!human) this.notifyAll();
 
             if(!removedToken && tokensPlaced < 3){
                 this.table.placeToken(this.id, currKey);
@@ -120,7 +120,7 @@ public class Player implements Runnable {
             else if(removedToken) tokensPlaced--;
 
             if(tokensPlaced >= 3){
-                synchronized(this.dealer){this.dealer.notifyAll();}//TODO make sure you notify dealer correctly
+                synchronized(this.dealer){this.dealer.notifyAll();}
                 try{
                     synchronized(this) {this.wait();}
                 }catch(InterruptedException e){}
@@ -189,13 +189,12 @@ public class Player implements Runnable {
         int ignored = table.countCards(); // this part is just for demonstration in the unit tests
         env.ui.setScore(id, ++score);
 
-        try{
-            playerThread.sleep(this.env.config.pointFreezeMillis);
-        }catch(InterruptedException egnored){}
-
         synchronized(this.keyQueue){
             this.keyQueue.clear(); 
             synchronized(this){this.notifyAll();}
+            try{
+                playerThread.sleep(this.env.config.pointFreezeMillis);
+            }catch(InterruptedException egnored){}
         }
     }
 
@@ -203,13 +202,12 @@ public class Player implements Runnable {
      * Penalize a player and perform other related actions.
      */
     public void penalty() {
-        try{
-            playerThread.sleep(this.env.config.penaltyFreezeMillis);
-        }catch(InterruptedException egnored){}
-
         synchronized(this.keyQueue){
             this.keyQueue.clear();
             synchronized(this){this.notifyAll();}
+            try{
+                playerThread.sleep(this.env.config.penaltyFreezeMillis);
+            }catch(InterruptedException egnored){}
         }
     }
 
