@@ -52,8 +52,8 @@ public class Table {
         this.slotToCard = slotToCard;
         this.cardToSlot = cardToSlot;
         this.cardsLock = new Object();
-        this.tokens = new ArrayList<List<Integer>>(env.config.rows*env.config.columns);
-        for(int i = 0; i < env.config.rows*env.config.columns; i++){
+        this.tokens = new ArrayList<List<Integer>>(env.config.tableSize);
+        for(int i = 0; i < env.config.tableSize; i++){
             this.tokens.add(new LinkedList<Integer>());
         }
     }
