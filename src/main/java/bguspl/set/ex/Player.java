@@ -68,6 +68,10 @@ public class Player implements Runnable {
      */
     private int tokensPlaced;
     
+    /**
+     * Time the player needs to sleep after checking set
+     */
+    private volatile long sleepFor;
 
     /**
      * The class constructor.
@@ -85,6 +89,7 @@ public class Player implements Runnable {
         this.human = human;
         this.keyQueue = new LinkedList<Integer>();
         this.dealer = dealer;
+        this.sleepFor = 0;
     }
 
     /**
@@ -100,6 +105,7 @@ public class Player implements Runnable {
         boolean removedToken = false;
         while (!terminate) {
             synchronized(keyQueue){
+                //wait for queue to have an input to process
                 while(this.keyQueue.size() == 0 && !terminate){
                     try{
                         this.keyQueue.wait();
@@ -107,12 +113,13 @@ public class Player implements Runnable {
                 }
                 currKey = this.keyQueue.remove();
                 this.keyQueue.notifyAll();
-                if(!human) synchronized(this){this.notifyAll();}
+                if(!human) synchronized(this){this.notifyAll();} // tell the ai thread it can resume work
             }
-            if(!terminate) continue;
+            if(!terminate) continue; // if the game is terminated, don't do anything else
 
             removedToken = this.table.removeToken(this.id, currKey);
-
+            //if there are already 3 tokens on the table, don't place any more
+            //and use them to signal the dealer to check for a set
             if(!removedToken && tokensPlaced < 3){
                 this.table.placeToken(this.id, currKey);
                 tokensPlaced++;
@@ -122,8 +129,20 @@ public class Player implements Runnable {
             if(tokensPlaced >= 3){
                 synchronized(this.dealer){this.dealer.notifyAll();}
                 try{
-                    synchronized(this) {this.wait();}
+                    synchronized(this.playerThread) {this.playerThread.wait();}
                 }catch(InterruptedException e){}
+            }
+
+            while(this.sleepFor > 0){
+                this.env.ui.setFreeze(this.id, this.sleepFor / 1000);
+                try{
+                    playerThread.sleep(Math.min(1000, this.sleepFor));
+                }catch(InterruptedException egnored){}
+                this.sleepFor = Math.max(0, this.sleepFor - 1000);
+            }
+            synchronized(this.keyQueue){
+                this.keyQueue.clear();
+                this.notifyAll();
             }
         }
         if (!human) try { aiThread.join(); } catch (InterruptedException ignored) {}
@@ -140,17 +159,19 @@ public class Player implements Runnable {
             env.logger.info("thread " + Thread.currentThread().getName() + " starting.");
             Random rnd = new java.util.Random();
             while (!terminate) {
-                while(this.keyQueue.size() >=  3 && !terminate)
-                {
-                    try{
-                        synchronized(this) {this.wait();}
-                    }catch(InterruptedException ignored){}
-                }
-                
-                keyPressed(rnd.nextInt(this.env.config.columns * this.env.config.rows));
+                synchronized(this.keyQueue){
+                    while (this.keyQueue.size() < 3 && !terminate){
+                        keyPressed(rnd.nextInt(this.env.config.tableSize));
 
-                try{Thread.sleep(rnd.nextInt(500) + 500);} //This is A smart ai not a fast ai
-                catch(InterruptedException e){}
+                        try{Thread.sleep(rnd.nextInt(500) + 500);} //This is A smart ai not a fast ai
+                        catch(InterruptedException e){}
+                    }
+                }
+                try{
+                    synchronized(this) {this.wait();}
+                }catch(InterruptedException ignored){}
+                
+                
             }
             env.logger.info("thread " + Thread.currentThread().getName() + " terminated.");
         }, "computer-" + id);
@@ -172,6 +193,7 @@ public class Player implements Runnable {
      * @param slot - the slot corresponding to the key pressed.
      */
     public void keyPressed(int slot) {
+        //if queue is full and recives input, remove the oldest input
         synchronized(this.keyQueue){
             this.keyQueue.add(slot);
             if(this.keyQueue.size() >= 3) this.keyQueue.remove();
@@ -189,26 +211,16 @@ public class Player implements Runnable {
         int ignored = table.countCards(); // this part is just for demonstration in the unit tests
         env.ui.setScore(id, ++score);
 
-        synchronized(this.keyQueue){
-            this.keyQueue.clear(); 
-            synchronized(this){this.notifyAll();}
-            try{
-                playerThread.sleep(this.env.config.pointFreezeMillis);
-            }catch(InterruptedException egnored){}
-        }
+        this.sleepFor = this.env.config.pointFreezeMillis;
+        synchronized(this.playerThread){this.playerThread.notifyAll();}//tell the player and ai thread to resume work
     }
 
     /**
      * Penalize a player and perform other related actions.
      */
     public void penalty() {
-        synchronized(this.keyQueue){
-            this.keyQueue.clear();
-            synchronized(this){this.notifyAll();}
-            try{
-                playerThread.sleep(this.env.config.penaltyFreezeMillis);
-            }catch(InterruptedException egnored){}
-        }
+        this.sleepFor = this.env.config.penaltyFreezeMillis;
+        synchronized(this.playerThread){this.playerThread.notifyAll();}//tell the player and ai thread to resume work
     }
 
     public int score() {
