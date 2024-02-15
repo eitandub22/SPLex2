@@ -61,7 +61,8 @@
       <updated>1707769695529</updated>
       <workItem from="1707769696901" duration="3965000" />
       <workItem from="1707916173597" duration="3696000" />
-      <workItem from="1707925856909" duration="696000" />
+      <workItem from="1707925856909" duration="812000" />
+      <workItem from="1708012448779" duration="2502000" />
     </task>
     <servers />
   </component>
@@ -79,7 +80,7 @@
                   <entry key="branch">
                     <value>
                       <list>
-                        <option value="origin/develop" />
+                        <option value="dealer" />
                       </list>
                     </value>
                   </entry>

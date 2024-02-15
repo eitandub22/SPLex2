@@ -41,6 +41,8 @@ public class Dealer implements Runnable {
      */
     private long reshuffleTime = Long.MAX_VALUE;
 
+    private List<Integer> playersSets;
+
     private final long timerMaxTime = 60000;
 
     private long timerValue;
@@ -50,6 +52,7 @@ public class Dealer implements Runnable {
         this.players = players;
         this.terminate = false;
         this.timerValue = timerMaxTime;
+        this.playersSets = new ArrayList<>();
         deck = IntStream.range(0, env.config.deckSize).boxed().collect(Collectors.toList());
     }
 
@@ -106,7 +109,15 @@ public class Dealer implements Runnable {
      * Checks cards should be removed (a set) from the table and removes them.
      */
     private void removeCardsFromTable() {
-        // TODO implement
+        int[] playerSet = new int[playersSets.size()];
+        for(int i = 0; i < playersSets.size(); i++){
+            playerSet[i] = playersSets.get(i);
+        }
+        if(env.util.testSet(playerSet)){
+            for(Integer card : playerSet){
+                table.removeCard(table.cardToSlot[card]);
+            }
+        }
     }
 
     /**
@@ -115,8 +126,15 @@ public class Dealer implements Runnable {
     private void placeCardsOnTable() {
         List<Integer> spots = table.getEmptySlots();
         Iterator<Integer> cards = deck.iterator();
-        for(Integer spot : spots){
-            table.placeCard(cards.next(), spot);
+        synchronized (table){
+            for(Integer spot : spots){
+                if(cards.hasNext()){
+                    table.placeCard(cards.next(), spot);
+                }
+                else{
+                    break;
+                }
+            }
         }
     }
 
@@ -124,7 +142,9 @@ public class Dealer implements Runnable {
      * Sleep for a fixed amount of time or until the thread is awakened for some purpose.
      */
     private void sleepUntilWokenOrTimeout() {
-        // TODO implement
+        try {
+            playersSets.wait();
+        } catch (InterruptedException e) {}
     }
 
     /**
