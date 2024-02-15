@@ -103,7 +103,7 @@ public class Player implements Runnable {
                 while(this.keyQueue.size() == 0 && !terminate){
                     try{
                         this.keyQueue.wait();
-                    }catch(InterruptedException e){}                    
+                    }catch(InterruptedException e){}
                 }
                 currKey = this.keyQueue.remove();
                 this.keyQueue.notifyAll();
@@ -111,6 +111,8 @@ public class Player implements Runnable {
             if(!terminate) continue;
 
             removedToken = this.table.removeToken(this.id, currKey);
+            if(!human) this.notifyAll();
+
             if(!removedToken && tokensPlaced < 3){
                 this.table.placeToken(this.id, currKey);
                 tokensPlaced++;
@@ -118,12 +120,11 @@ public class Player implements Runnable {
             else if(removedToken) tokensPlaced--;
 
             if(tokensPlaced >= 3){
-                this.dealer.notifyAll();
+                synchronized(this.dealer){this.dealer.notifyAll();}//TODO make sure you notify dealer correctly
                 try{
-                    this.wait();
-                }catch(InterruptedException egnored){continue;}
+                    synchronized(this) {this.wait();}
+                }catch(InterruptedException e){}
             }
-
         }
         if (!human) try { aiThread.join(); } catch (InterruptedException ignored) {}
         env.logger.info("thread " + Thread.currentThread().getName() + " terminated.");
@@ -139,10 +140,17 @@ public class Player implements Runnable {
             env.logger.info("thread " + Thread.currentThread().getName() + " starting.");
             Random rnd = new java.util.Random();
             while (!terminate) {
+                while(this.keyQueue.size() >=  3 && !terminate)
+                {
+                    try{
+                        synchronized(this) {this.wait();}
+                    }catch(InterruptedException ignored){}
+                }
+                
                 keyPressed(rnd.nextInt(this.env.config.columns * this.env.config.rows));
-                try {
-                    Thread.sleep(1000); // thats a very *smart* ai not a very *fast* one, slow down
-                } catch (InterruptedException ignored) {continue;}
+
+                try{Thread.sleep(rnd.nextInt(500) + 500);} //This is A smart ai not a fast ai
+                catch(InterruptedException e){}
             }
             env.logger.info("thread " + Thread.currentThread().getName() + " terminated.");
         }, "computer-" + id);
@@ -165,12 +173,8 @@ public class Player implements Runnable {
      */
     public void keyPressed(int slot) {
         synchronized(this.keyQueue){
-            while(this.keyQueue.size() >= 3){
-                try{
-                    this.keyQueue.wait();
-                }catch(InterruptedException egnored){}
-            }
             this.keyQueue.add(slot);
+            if(this.keyQueue.size() >= 3) this.keyQueue.remove();
             this.keyQueue.notifyAll();
         }
     }
@@ -191,7 +195,7 @@ public class Player implements Runnable {
 
         synchronized(this.keyQueue){
             this.keyQueue.clear(); 
-            this.keyQueue.notifyAll();//TODO wll wake up thread for no reason, should be fixed
+            synchronized(this){this.notifyAll();}
         }
     }
 
@@ -205,7 +209,7 @@ public class Player implements Runnable {
 
         synchronized(this.keyQueue){
             this.keyQueue.clear();
-            this.keyQueue.notifyAll();//TODO wll wake up thread for no reason, should be fixed
+            synchronized(this){this.notifyAll();}
         }
     }
 
