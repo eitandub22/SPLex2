@@ -7,10 +7,7 @@
         <option value="$PROJECT_DIR$/pom.xml" />
       </list>
     </option>
-<<<<<<< HEAD
     <option name="workspaceImportForciblyTurnedOn" value="true" />
-=======
->>>>>>> table
   </component>
   <component name="ProjectRootManager" version="2" languageLevel="JDK_20" default="true" project-jdk-name="openjdk-20" project-jdk-type="JavaSDK" />
 </project>

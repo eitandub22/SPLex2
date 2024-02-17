@@ -40,19 +40,13 @@ public class Dealer implements Runnable {
      * The time when the dealer needs to reshuffle the deck due to turn timeout.
      */
     private long reshuffleTime = Long.MAX_VALUE;
-
-    private List<Integer> playersSets;
-
-    private final long timerMaxTime = 60000;
-
-    private long timerValue;
+    private Integer requestingPlayerId;
     public Dealer(Env env, Table table, Player[] players) {
         this.env = env;
         this.table = table;
         this.players = players;
         this.terminate = false;
-        this.timerValue = timerMaxTime;
-        this.playersSets = new ArrayList<>();
+        this.requestingPlayerId = new Integer(-1);
         deck = IntStream.range(0, env.config.deckSize).boxed().collect(Collectors.toList());
     }
 
@@ -81,6 +75,7 @@ public class Dealer implements Runnable {
      * The inner loop of the dealer thread that runs as long as the countdown did not time out.
      */
     private void timerLoop() {
+        reshuffleTime = System.currentTimeMillis() + env.config.turnTimeoutMillis;
         while (!terminate && System.currentTimeMillis() < reshuffleTime) {
             sleepUntilWokenOrTimeout();
             updateTimerDisplay(false);
@@ -93,7 +88,7 @@ public class Dealer implements Runnable {
      * Called when the game should be terminated.
      */
     public void terminate() {
-        // TODO implement
+        terminate = true;
     }
 
     /**
@@ -109,15 +104,20 @@ public class Dealer implements Runnable {
      * Checks cards should be removed (a set) from the table and removes them.
      */
     private void removeCardsFromTable() {
-        int[] playerSet = new int[playersSets.size()];
-        for(int i = 0; i < playersSets.size(); i++){
-            playerSet[i] = playersSets.get(i);
-        }
+        /*Player requestingPlayer = players[requestingPlayerId];
+        int[] playerSet = requestingPlayer.getTokens();// TODO implement
         if(env.util.testSet(playerSet)){
             for(Integer card : playerSet){
                 table.removeCard(table.cardToSlot[card]);
             }
+            updateTimerDisplay(true);
+            requestingPlayer.point();
+            env.ui.setFreeze(requestingPlayer.id, env.config.pointFreezeMillis);
         }
+        else{
+            requestingPlayer.penalty();
+            env.ui.setFreeze(requestingPlayer.id, env.config.penaltyFreezeMillis);
+        }*/
     }
 
     /**
@@ -129,6 +129,9 @@ public class Dealer implements Runnable {
         synchronized (table){
             for(Integer spot : spots){
                 if(cards.hasNext()){
+                    try {
+                        Thread.sleep(env.config.tableDelayMillis);
+                    } catch (InterruptedException ignored) {}
                     table.placeCard(cards.next(), spot);
                 }
                 else{
@@ -142,9 +145,12 @@ public class Dealer implements Runnable {
      * Sleep for a fixed amount of time or until the thread is awakened for some purpose.
      */
     private void sleepUntilWokenOrTimeout() {
-        try {
-            playersSets.wait();
-        } catch (InterruptedException e) {}
+        try{
+            synchronized (requestingPlayerId){
+                requestingPlayerId.wait(100);
+            }
+        }
+        catch (InterruptedException e){}
     }
 
     /**
@@ -152,14 +158,11 @@ public class Dealer implements Runnable {
      */
     private void updateTimerDisplay(boolean reset) {
         if(reset){
-            env.ui.setCountdown(timerMaxTime, false);
+            env.ui.setCountdown(env.config.turnTimeoutMillis, false);
+            reshuffleTime = System.currentTimeMillis() + env.config.turnTimeoutMillis;
         }
         else{
-            timerValue -= 1000;
-            try{
-                Thread.sleep(1000);
-            } catch (InterruptedException ignored) {}
-            env.ui.setCountdown(timerValue, false);
+            env.ui.setCountdown(reshuffleTime - System.currentTimeMillis(), false);
         }
     }
 
@@ -200,5 +203,14 @@ public class Dealer implements Runnable {
             winnersArr[i] = winners.get(i);
         }
         env.ui.announceWinner(winnersArr);
+    }
+
+    public void checkPlayerRequest(int id){
+        for(Player p : players){
+            if(p.id == id){
+                requestingPlayerId = id;
+                notify();
+            }
+        }
     }
 }
