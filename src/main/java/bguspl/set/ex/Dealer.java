@@ -64,7 +64,7 @@ public class Dealer implements Runnable {
             Collections.shuffle(deck);
             placeCardsOnTable();
             timerLoop();
-            updateTimerDisplay(false);
+            updateTimerDisplay(true);
             removeAllCardsFromTable();
         }
         announceWinners();
@@ -104,7 +104,7 @@ public class Dealer implements Runnable {
      * Checks cards should be removed (a set) from the table and removes them.
      */
     private void removeCardsFromTable() {
-        /*Player requestingPlayer = players[requestingPlayerId];
+        Player requestingPlayer = players[requestingPlayerId];
         int[] playerSet = requestingPlayer.getTokens();// TODO implement
         if(env.util.testSet(playerSet)){
             for(Integer card : playerSet){
@@ -117,7 +117,7 @@ public class Dealer implements Runnable {
         else{
             requestingPlayer.penalty();
             env.ui.setFreeze(requestingPlayer.id, env.config.penaltyFreezeMillis);
-        }*/
+        }
     }
 
     /**
@@ -147,7 +147,7 @@ public class Dealer implements Runnable {
     private void sleepUntilWokenOrTimeout() {
         try{
             synchronized (requestingPlayerId){
-                requestingPlayerId.wait(100);
+                requestingPlayerId.wait(1000);//sleep for a second and then update the timer or until a player wants to check a set
             }
         }
         catch (InterruptedException e){}
@@ -176,7 +176,7 @@ public class Dealer implements Runnable {
                 deck.add(table.getCardFromSlot(i));
                 table.removeCard(i);
             }
-            //removeAllTokens(); TODO implement
+            //table.removeAllTokens(); TODO implement
         }
         synchronized (env.ui){
             for (int i = 0; i < slotsNum; i++) {
