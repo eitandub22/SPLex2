@@ -66,6 +66,7 @@ public class Dealer implements Runnable {
             timerLoop();
             updateTimerDisplay(true);
             removeAllCardsFromTable();
+            table.removeAllTokens();
         }
         announceWinners();
         env.logger.info("thread " + Thread.currentThread().getName() + " terminated.");
@@ -180,7 +181,6 @@ public class Dealer implements Runnable {
                 deck.add(table.getCardFromSlot(i));
                 table.removeCard(i);
             }
-            //table.removeAllTokens(); TODO implement
         }
         synchronized (env.ui){
             for (int i = 0; i < slotsNum; i++) {
