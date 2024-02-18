@@ -5,6 +5,8 @@ import bguspl.set.Env;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Random;
+import java.util.logging.Level;
+
 /**
  * This class manages the players' threads and data
  *
@@ -109,8 +111,7 @@ public class Player implements Runnable {
                 this.keyQueue.notifyAll();
                 if(!human) synchronized(this){this.notifyAll();} // tell the ai thread it can resume work
             }
-            if(!terminate) continue; // if the game is terminated, don't do anything else
-
+            if(terminate) continue; // if the game is terminated, don't do anything else
             //if there are already 3 tokens on the table, don't place any more
             //and use them to signal the dealer to check for a set
             if(!this.table.removeToken(this.id, currKey) && this.table.numTokens(this.id) < 3){
@@ -125,15 +126,18 @@ public class Player implements Runnable {
             }
 
             while(this.sleepFor > 0){
-                this.env.ui.setFreeze(this.id, this.sleepFor / 1000);
+                this.env.ui.setFreeze(this.id, this.sleepFor);
                 try{
                     playerThread.sleep(Math.min(1000, this.sleepFor));
                 }catch(InterruptedException egnored){}
                 this.sleepFor = Math.max(0, this.sleepFor - 1000);
             }
+            this.env.ui.setFreeze(this.id, this.sleepFor);
             synchronized(this.keyQueue){
                 this.keyQueue.clear();
-                this.notifyAll();
+                synchronized (this){
+                    this.notifyAll();
+                }
             }
         }
         if (!human) try { aiThread.join(); } catch (InterruptedException ignored) {}

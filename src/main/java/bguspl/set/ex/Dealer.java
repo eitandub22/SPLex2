@@ -76,7 +76,7 @@ public class Dealer implements Runnable {
      * The inner loop of the dealer thread that runs as long as the countdown did not time out.
      */
     private void timerLoop() {
-        reshuffleTime = System.currentTimeMillis() + env.config.turnTimeoutMillis;
+        reshuffleTime = System.currentTimeMillis() + env.config.turnTimeoutMillis + 1000;
         while (!terminate && System.currentTimeMillis() < reshuffleTime) {
             sleepUntilWokenOrTimeout();
             updateTimerDisplay(false);
@@ -117,10 +117,10 @@ public class Dealer implements Runnable {
                     playerSet[i] = playerSetList.get(i);
                 }
                 if(env.util.testSet(playerSet)){
-                    for(Integer card : playerSet){
-                        table.removeCard(table.cardToSlot[card]);
-                        List<Integer> playersInSlot = table.tokensToPlayers.get(table.cardToSlot[card]);
-                        table.removeTokensFromSlot(table.cardToSlot[card]);
+                    for(Integer slot : playerSet){
+                        table.removeCard(slot);
+                        List<Integer> playersInSlot = table.tokensToPlayers.get(slot);
+                        table.removeTokensFromSlot(slot);
                         for(Integer playerId : playersInSlot){
                             playerThreads[playerId].notifyAll();
                         }
@@ -148,9 +148,6 @@ public class Dealer implements Runnable {
         synchronized (table){
             for(Integer spot : spots){
                 if(cards.hasNext()){
-                    try {
-                        Thread.sleep(env.config.tableDelayMillis);
-                    } catch (InterruptedException ignored) {}
                     table.placeCard(cards.next(), spot);
                 }
                 else{
@@ -225,6 +222,8 @@ public class Dealer implements Runnable {
 
     public void checkPlayerRequest(Player player){
         requestingPlayers.add(player);
-        requestingPlayers.notifyAll();
+        synchronized (requestingPlayers){
+            requestingPlayers.notifyAll();
+        }
     }
 }

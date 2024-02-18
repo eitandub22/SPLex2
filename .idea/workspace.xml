@@ -4,7 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6ea90e55-67dd-42c0-84bb-17976f65ef99" name="Changes" comment="" />
+    <list default="true" id="6ea90e55-67dd-42c0-84bb-17976f65ef99" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_13_02_2024_17_07__Changes_.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_13_02_2024_17_07__Changes_.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/bguspl/set/ex/Dealer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/bguspl/set/ex/Dealer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/bguspl/set/ex/Player.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/bguspl/set/ex/Player.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/bguspl/set/ex/Table.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/bguspl/set/ex/Table.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -19,8 +25,8 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="ProjectColorInfo">{
-  &quot;associatedIndex&quot;: 6
-}</component>
+    &quot;associatedIndex&quot;: 6
+    }</component>
   <component name="ProjectId" id="2cHXts0qHWiNLVT15agT1CIhc5v" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
@@ -63,6 +69,7 @@
       <workItem from="1708012448779" duration="6169000" />
       <workItem from="1708250813738" duration="2760000" />
       <workItem from="1708277751430" duration="443000" />
+      <workItem from="1708279475763" duration="8171000" />
     </task>
     <servers />
   </component>
@@ -91,5 +98,15 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <breakpoint enabled="true" type="java-exception">
+          <properties class="java.lang.RuntimeException" package="java.lang" />
+          <option name="timeStamp" value="1" />
+        </breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

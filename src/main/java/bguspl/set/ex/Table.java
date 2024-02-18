@@ -178,13 +178,14 @@ public class Table {
      */
     public boolean removeToken(int player, int slot) {
         synchronized(this.tokensLock){
-            int index = this.playersToTokens.get(player).indexOf(slot);
-            if(index == -1) return false;
-            this.tokensToPlayers.get(player).remove(index);
+            int tokenIndex = this.playersToTokens.get(player).indexOf(slot);
+            if(tokenIndex == -1 || this.tokensToPlayers.isEmpty()) return false;
 
-            index = this.tokensToPlayers.get(slot).indexOf(player);
-            if(index == -1) return false;
-            this.playersToTokens.get(slot).remove(index);
+
+            int index = this.tokensToPlayers.get(slot).indexOf(player);
+            if(index == -1 || this.playersToTokens.isEmpty()) return false;
+            this.playersToTokens.get(player).remove(this.playersToTokens.get(player).indexOf(slot));
+            this.tokensToPlayers.get(slot).remove(this.tokensToPlayers.get(slot).indexOf(player));
         }
 
         synchronized(this.env.ui){
