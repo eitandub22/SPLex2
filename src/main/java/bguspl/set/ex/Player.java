@@ -118,7 +118,7 @@ public class Player implements Runnable {
             }
 
             if(this.table.numTokens(this.id) >= 3){
-                synchronized(this.dealer){this.dealer.notifyAll();}
+                this.dealer.checkPlayerRequest(this);
                 try{
                     synchronized(this.playerThread) {this.playerThread.wait();}
                 }catch(InterruptedException e){}
