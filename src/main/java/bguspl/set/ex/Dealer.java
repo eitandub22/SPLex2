@@ -38,12 +38,15 @@ public class Dealer implements Runnable {
      */
     private long reshuffleTime = Long.MAX_VALUE;
     private Queue<Player> requestingPlayers;
+
+    private Thread[] playerThreads;
     public Dealer(Env env, Table table, Player[] players) {
         this.env = env;
         this.table = table;
         this.players = players;
         this.terminate = false;
         this.requestingPlayers = new LinkedList<>();
+        playerThreads = new Thread[players.length];
         deck = IntStream.range(0, env.config.deckSize).boxed().collect(Collectors.toList());
     }
 
@@ -108,26 +111,26 @@ public class Dealer implements Runnable {
         while(!requestingPlayers.isEmpty()){
             Player requestingPlayer = requestingPlayers.remove();
             List<Integer> playerSetList = table.getTokens(requestingPlayer.id);
-            int[] playerSet = new int[playerSetList.size()];
-            for(int i = 0; i < playerSetList.size(); i++){
-                playerSet[i] = playerSetList.get(i);
-            }
-            if(env.util.testSet(playerSet)){
-                for(Integer card : playerSet){
-                    table.removeCard(table.cardToSlot[card]);
-                    //save all players we removed their tokens in a list
-                    List<Integer> playersInSlot = table.tokensToPlayers.get(table.cardToSlot[card]);
-                    table.removeTokensFromSlot(table.cardToSlot[card]);
-                    //notify player that we removed his tokens
-                    for(Integer playerId : playersInSlot){
-                        players[playerId].notify();
-                    }
+            if(playerSetList.size() == 3){
+                int[] playerSet = new int[playerSetList.size()];
+                for(int i = 0; i < playerSetList.size(); i++){
+                    playerSet[i] = playerSetList.get(i);
                 }
-                updateTimerDisplay(true);
-                requestingPlayer.point();
-            }
-            else{
-                requestingPlayer.penalty();
+                if(env.util.testSet(playerSet)){
+                    for(Integer card : playerSet){
+                        table.removeCard(table.cardToSlot[card]);
+                        List<Integer> playersInSlot = table.tokensToPlayers.get(table.cardToSlot[card]);
+                        table.removeTokensFromSlot(table.cardToSlot[card]);
+                        for(Integer playerId : playersInSlot){
+                            playerThreads[playerId].notifyAll();
+                        }
+                    }
+                    updateTimerDisplay(true);
+                    requestingPlayer.point();
+                }
+                else{
+                    requestingPlayer.penalty();
+                }
             }
         }
     }
