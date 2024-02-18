@@ -111,7 +111,8 @@ public class Dealer implements Runnable {
             if(env.util.testSet(playerSet)){
                 for(Integer card : playerSet){
                     table.removeCard(table.cardToSlot[card]);
-                    table.removeTokensFromSlot(table.cardToSlot[card]);
+                    table.removeTokensFromSlot(table.cardToSlot[card]);//TODO implement
+                    //notify player that we removed his tokens
                 }
                 updateTimerDisplay(true);
                 requestingPlayer.point();
