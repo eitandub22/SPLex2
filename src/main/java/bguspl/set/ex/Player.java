@@ -154,6 +154,9 @@ public class Player implements Runnable {
                     while (this.keyQueue.size() < 3 && !terminate){
                         keyPressed(rnd.nextInt(this.env.config.tableSize));
 
+                        //note: sleeping while holding the key is a bit wasefull,
+                        //but the only one thread that waits for the queue to be empty is the player thread
+                        //so it wont cause a thread to wait for nothing
                         try{Thread.sleep(rnd.nextInt(500) + 500);} //This is A smart ai not a fast ai
                         catch(InterruptedException e){}
                     }
