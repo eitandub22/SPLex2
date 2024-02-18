@@ -31,13 +31,21 @@ public class Table {
      */
     protected final Integer[] cardToSlot; // slot per card (if any)
     /** 
-     * ID of players with token in each cell
+     * Mapping between a player and the tokens he has on the table.
     */
-    protected final List<List<Integer>> tokens;
+    protected final List<List<Integer>> playersToTokens;
+    /**
+     * Mapping between a slot and the playes that placed a token on it.
+     */
+    protected final List<List<Integer>> tokensToPlayers;
     /**
      * Lock for slotToCard and cardToSlot
      */
     private final Object cardsLock;
+    /**
+     * Lock for playersToTokens and tokensToPlayers
+     */
+    private final Object tokensLock;
 
     /**
      * Constructor for testing.
@@ -52,9 +60,16 @@ public class Table {
         this.slotToCard = slotToCard;
         this.cardToSlot = cardToSlot;
         this.cardsLock = new Object();
-        this.tokens = new ArrayList<List<Integer>>(env.config.players);
+        this.tokensLock = new Object();
+        
+        this.playersToTokens = new ArrayList<List<Integer>>(env.config.players);
         for(int i = 0; i < env.config.tableSize; i++){
-            this.tokens.add(new LinkedList<Integer>());
+            this.playersToTokens.add(new LinkedList<Integer>());
+        }
+
+        this.tokensToPlayers = new ArrayList<List<Integer>>(env.config.tableSize);
+        for(int i = 0; i < env.config.tableSize; i++){
+            this.tokensToPlayers.add(new LinkedList<Integer>());
         }
     }
 
@@ -145,8 +160,9 @@ public class Table {
      * @param slot   - the slot on which to place the token.
      */
     public void placeToken(int player, int slot) {
-        synchronized(this.tokens){
-            this.tokens.get(player).add(slot);
+        synchronized(this.tokensLock){
+            this.playersToTokens.get(player).add(slot);
+            this.tokensToPlayers.get(slot).add(player);
         }
 
         synchronized(this.env.ui){
@@ -161,10 +177,14 @@ public class Table {
      * @return       - true iff a token was successfully removed.
      */
     public boolean removeToken(int player, int slot) {
-        synchronized(this.tokens){
-            int index = this.tokens.get(player).indexOf(slot);
+        synchronized(this.tokensLock){
+            int index = this.playersToTokens.get(player).indexOf(slot);
             if(index == -1) return false;
-            this.tokens.get(player).remove(index);
+            this.tokensToPlayers.get(player).remove(index);
+
+            index = this.tokensToPlayers.get(slot).indexOf(player);
+            if(index == -1) return false;
+            this.playersToTokens.get(slot).remove(index);
         }
 
         synchronized(this.env.ui){
@@ -189,18 +209,28 @@ public class Table {
 
     public void removeAllTokens()
     {
-        int currID = 0;
-        for(List<Integer> playerTokens : this.tokens){
-            while(!playerTokens.isEmpty()){
-                removeToken(currID, playerTokens.remove(0));
+        for(int i = 0; i < this.playersToTokens.size(); i++){
+            while(!this.playersToTokens.get(i).isEmpty()){
+                removeToken(i, this.playersToTokens.get(i).get(0));
             }
-            currID++;
         }
     }
 
     public int numTokens(int player){
-        synchronized(this.tokens){
-            return this.tokens.get(player).size();
+        synchronized(this.tokensLock){
+            return this.playersToTokens.get(player).size();
+        }
+    }
+
+    public List<Integer> getTokens(int playerId){
+        return this.playersToTokens.get(playerId);
+    }
+
+    public void removeTokensFromSlot(int slot){
+        synchronized(this.tokensLock){
+            while(!this.tokensToPlayers.get(slot).isEmpty()){
+                removeToken(this.tokensToPlayers.get(slot).get(0), slot);
+            }
         }
     }
 }
