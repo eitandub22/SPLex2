@@ -111,14 +111,13 @@ public class Dealer implements Runnable {
             if(env.util.testSet(playerSet)){
                 for(Integer card : playerSet){
                     table.removeCard(table.cardToSlot[card]);
+                    table.removeTokensFromSlot(table.cardToSlot[card]);
                 }
                 updateTimerDisplay(true);
                 requestingPlayer.point();
-                env.ui.setFreeze(requestingPlayer.id, env.config.pointFreezeMillis);
             }
             else{
                 requestingPlayer.penalty();
-                env.ui.setFreeze(requestingPlayer.id, env.config.penaltyFreezeMillis);
             }
         }
     }
