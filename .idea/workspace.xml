@@ -4,9 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6ea90e55-67dd-42c0-84bb-17976f65ef99" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/src/main/java/bguspl/set/ex/Dealer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/bguspl/set/ex/Dealer.java" afterDir="false" />
-    </list>
+    <list default="true" id="6ea90e55-67dd-42c0-84bb-17976f65ef99" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -64,6 +62,7 @@
       <workItem from="1707925856909" duration="812000" />
       <workItem from="1708012448779" duration="6169000" />
       <workItem from="1708250813738" duration="2760000" />
+      <workItem from="1708277751430" duration="443000" />
     </task>
     <servers />
   </component>
