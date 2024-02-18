@@ -3,10 +3,7 @@ package bguspl.set.ex;
 import bguspl.set.Env;
 import bguspl.set.ThreadLogger;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -40,13 +37,13 @@ public class Dealer implements Runnable {
      * The time when the dealer needs to reshuffle the deck due to turn timeout.
      */
     private long reshuffleTime = Long.MAX_VALUE;
-    private Integer requestingPlayerId;
+    private Queue<Player> requestingPlayers;
     public Dealer(Env env, Table table, Player[] players) {
         this.env = env;
         this.table = table;
         this.players = players;
         this.terminate = false;
-        this.requestingPlayerId = new Integer(-1);
+        this.requestingPlayers = new LinkedList<>();
         deck = IntStream.range(0, env.config.deckSize).boxed().collect(Collectors.toList());
     }
 
@@ -108,19 +105,21 @@ public class Dealer implements Runnable {
      * Checks cards should be removed (a set) from the table and removes them.
      */
     private void removeCardsFromTable() {
-        Player requestingPlayer = players[requestingPlayerId];
-        int[] playerSet = requestingPlayer.getTokens();// TODO implement
-        if(env.util.testSet(playerSet)){
-            for(Integer card : playerSet){
-                table.removeCard(table.cardToSlot[card]);
+        while(!requestingPlayers.isEmpty()){
+            Player requestingPlayer = requestingPlayers.remove();
+            int[] playerSet = table.getTokens(requestingPlayer.id);// TODO implement
+            if(env.util.testSet(playerSet)){
+                for(Integer card : playerSet){
+                    table.removeCard(table.cardToSlot[card]);
+                }
+                updateTimerDisplay(true);
+                requestingPlayer.point();
+                env.ui.setFreeze(requestingPlayer.id, env.config.pointFreezeMillis);
             }
-            updateTimerDisplay(true);
-            requestingPlayer.point();
-            env.ui.setFreeze(requestingPlayer.id, env.config.pointFreezeMillis);
-        }
-        else{
-            requestingPlayer.penalty();
-            env.ui.setFreeze(requestingPlayer.id, env.config.penaltyFreezeMillis);
+            else{
+                requestingPlayer.penalty();
+                env.ui.setFreeze(requestingPlayer.id, env.config.penaltyFreezeMillis);
+            }
         }
     }
 
@@ -151,8 +150,8 @@ public class Dealer implements Runnable {
      */
     private void sleepUntilWokenOrTimeout() {
         try{
-            synchronized (requestingPlayerId){
-                requestingPlayerId.wait(1000);//sleep for a second and then update the timer or until a player wants to check a set
+            synchronized (requestingPlayers){
+                requestingPlayers.wait(1000);//sleep for a second and then update the timer or until a player wants to check a set
             }
         }
         catch (InterruptedException e){}
@@ -209,12 +208,8 @@ public class Dealer implements Runnable {
         env.ui.announceWinner(winnersArr);
     }
 
-    public void checkPlayerRequest(int id){
-        for(Player p : players){
-            if(p.id == id){
-                requestingPlayerId = id;
-                notify();
-            }
-        }
+    public void checkPlayerRequest(Player player){
+        requestingPlayers.add(player);
+        requestingPlayers.notifyAll();
     }
 }
