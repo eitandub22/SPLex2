@@ -132,6 +132,9 @@ public class Dealer implements Runnable {
                     requestingPlayer.penalty();
                 }
             }
+            else{
+                playerThreads[requestingPlayer.id].notifyAll();
+            }
         }
     }
 
