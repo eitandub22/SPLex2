@@ -62,11 +62,6 @@ public class Player implements Runnable {
      * Queue of keys pressed.
      */
     private Queue<Integer> keyQueue;
-
-    /**
-     * Number of tokens on the table
-     */
-    private int tokensPlaced;
     
     /**
      * Time the player needs to sleep after checking set
@@ -102,7 +97,6 @@ public class Player implements Runnable {
         if (!human) createArtificialIntelligence();
 
         int currKey = 0;
-        boolean removedToken = false;
         while (!terminate) {
             synchronized(keyQueue){
                 //wait for queue to have an input to process
@@ -117,17 +111,14 @@ public class Player implements Runnable {
             }
             if(!terminate) continue; // if the game is terminated, don't do anything else
 
-            removedToken = this.table.removeToken(this.id, currKey);
             //if there are already 3 tokens on the table, don't place any more
             //and use them to signal the dealer to check for a set
-            if(!removedToken && tokensPlaced < 3){
+            if(!this.table.removeToken(this.id, currKey) && this.table.numTokens(this.id) < 3){
                 this.table.placeToken(this.id, currKey);
-                tokensPlaced++;
             }
-            else if(removedToken) tokensPlaced--;
 
-            if(tokensPlaced >= 3){
-                synchronized(this.dealer){this.dealer.notifyAll();}
+            if(this.table.numTokens(this.id) >= 3){
+                this.dealer.checkPlayerRequest(this);
                 try{
                     synchronized(this.playerThread) {this.playerThread.wait();}
                 }catch(InterruptedException e){}
@@ -163,6 +154,9 @@ public class Player implements Runnable {
                     while (this.keyQueue.size() < 3 && !terminate){
                         keyPressed(rnd.nextInt(this.env.config.tableSize));
 
+                        //note: sleeping while holding the key is a bit wasefull,
+                        //but the only one thread that waits for the queue to be empty is the player thread
+                        //so it wont cause a thread to wait for nothing
                         try{Thread.sleep(rnd.nextInt(500) + 500);} //This is A smart ai not a fast ai
                         catch(InterruptedException e){}
                     }
