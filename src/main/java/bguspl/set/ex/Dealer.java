@@ -89,6 +89,9 @@ public class Dealer implements Runnable {
      */
     public void terminate() {
         terminate = true;
+        for(Player p : players){
+            p.terminate();
+        }
     }
 
     /**
@@ -125,6 +128,7 @@ public class Dealer implements Runnable {
      */
     private void placeCardsOnTable() {
         List<Integer> spots = table.getEmptySlots();
+        Collections.shuffle(spots);
         Iterator<Integer> cards = deck.iterator();
         synchronized (table){
             for(Integer spot : spots){
