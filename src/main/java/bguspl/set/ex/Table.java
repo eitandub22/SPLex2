@@ -202,4 +202,8 @@ public class Table {
             return this.tokens.get(player).size();
         }
     }
+
+    public List<Integer> getTokens(int playerId){
+        return this.tokens.get(playerId);
+    }
 }
