@@ -194,6 +194,7 @@ public class Table {
             while(!playerTokens.isEmpty()){
                 removeToken(currID, playerTokens.remove(0));
             }
+            currID++;
         }
     }
 
