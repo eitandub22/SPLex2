@@ -2,6 +2,9 @@ package bguspl.set.ex;
 
 import bguspl.set.Env;
 
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.Random;
 /**
  * This class manages the players' threads and data
  *
@@ -49,6 +52,21 @@ public class Player implements Runnable {
      * The current score of the player.
      */
     private int score;
+    
+    /**
+     * The game dealer
+     */
+    private Dealer dealer;
+
+    /**
+     * Queue of keys pressed.
+     */
+    private Queue<Integer> keyQueue;
+    
+    /**
+     * Time the player needs to sleep after checking set
+     */
+    private volatile long sleepFor;
 
     /**
      * The class constructor.
@@ -64,19 +82,59 @@ public class Player implements Runnable {
         this.table = table;
         this.id = id;
         this.human = human;
+        this.keyQueue = new LinkedList<Integer>();
+        this.dealer = dealer;
+        this.sleepFor = 0;
     }
 
     /**
      * The main player thread of each player starts here (main loop for the player thread).
      */
     @Override
-    public void run() {
+    public void run(){
         playerThread = Thread.currentThread();
         env.logger.info("thread " + Thread.currentThread().getName() + " starting.");
         if (!human) createArtificialIntelligence();
 
+        int currKey = 0;
         while (!terminate) {
-            // TODO implement main player loop
+            synchronized(keyQueue){
+                //wait for queue to have an input to process
+                while(this.keyQueue.size() == 0 && !terminate){
+                    try{
+                        this.keyQueue.wait();
+                    }catch(InterruptedException e){}
+                }
+                currKey = this.keyQueue.remove();
+                this.keyQueue.notifyAll();
+                if(!human) synchronized(this){this.notifyAll();} // tell the ai thread it can resume work
+            }
+            if(!terminate) continue; // if the game is terminated, don't do anything else
+
+            //if there are already 3 tokens on the table, don't place any more
+            //and use them to signal the dealer to check for a set
+            if(!this.table.removeToken(this.id, currKey) && this.table.numTokens(this.id) < 3){
+                this.table.placeToken(this.id, currKey);
+            }
+
+            if(this.table.numTokens(this.id) >= 3){
+                this.dealer.checkPlayerRequest(this);
+                try{
+                    synchronized(this.playerThread) {this.playerThread.wait();}
+                }catch(InterruptedException e){}
+            }
+
+            while(this.sleepFor > 0){
+                this.env.ui.setFreeze(this.id, this.sleepFor / 1000);
+                try{
+                    playerThread.sleep(Math.min(1000, this.sleepFor));
+                }catch(InterruptedException egnored){}
+                this.sleepFor = Math.max(0, this.sleepFor - 1000);
+            }
+            synchronized(this.keyQueue){
+                this.keyQueue.clear();
+                this.notifyAll();
+            }
         }
         if (!human) try { aiThread.join(); } catch (InterruptedException ignored) {}
         env.logger.info("thread " + Thread.currentThread().getName() + " terminated.");
@@ -90,11 +148,24 @@ public class Player implements Runnable {
         // note: this is a very, very smart AI (!)
         aiThread = new Thread(() -> {
             env.logger.info("thread " + Thread.currentThread().getName() + " starting.");
+            Random rnd = new java.util.Random();
             while (!terminate) {
-                // TODO implement player key press simulator
-                try {
-                    synchronized (this) { wait(); }
-                } catch (InterruptedException ignored) {}
+                synchronized(this.keyQueue){
+                    while (this.keyQueue.size() < 3 && !terminate){
+                        keyPressed(rnd.nextInt(this.env.config.tableSize));
+
+                        //note: sleeping while holding the key is a bit wasefull,
+                        //but the only one thread that waits for the queue to be empty is the player thread
+                        //so it wont cause a thread to wait for nothing
+                        try{Thread.sleep(rnd.nextInt(500) + 500);} //This is A smart ai not a fast ai
+                        catch(InterruptedException e){}
+                    }
+                }
+                try{
+                    synchronized(this) {this.wait();}
+                }catch(InterruptedException ignored){}
+                
+                
             }
             env.logger.info("thread " + Thread.currentThread().getName() + " terminated.");
         }, "computer-" + id);
@@ -105,7 +176,9 @@ public class Player implements Runnable {
      * Called when the game should be terminated.
      */
     public void terminate() {
-        // TODO implement
+        this.terminate = true;
+        if(!human) aiThread.interrupt();
+        playerThread.interrupt();
     }
 
     /**
@@ -114,7 +187,12 @@ public class Player implements Runnable {
      * @param slot - the slot corresponding to the key pressed.
      */
     public void keyPressed(int slot) {
-        // TODO implement
+        //if queue is full and recives input, remove the oldest input
+        synchronized(this.keyQueue){
+            this.keyQueue.add(slot);
+            if(this.keyQueue.size() >= 3) this.keyQueue.remove();
+            this.keyQueue.notifyAll();
+        }
     }
 
     /**
@@ -124,17 +202,19 @@ public class Player implements Runnable {
      * @post - the player's score is updated in the ui.
      */
     public void point() {
-        // TODO implement
-
         int ignored = table.countCards(); // this part is just for demonstration in the unit tests
         env.ui.setScore(id, ++score);
+
+        this.sleepFor = this.env.config.pointFreezeMillis;
+        synchronized(this.playerThread){this.playerThread.notifyAll();}//tell the player and ai thread to resume work
     }
 
     /**
      * Penalize a player and perform other related actions.
      */
     public void penalty() {
-        // TODO implement
+        this.sleepFor = this.env.config.penaltyFreezeMillis;
+        synchronized(this.playerThread){this.playerThread.notifyAll();}//tell the player and ai thread to resume work
     }
 
     public int score() {
