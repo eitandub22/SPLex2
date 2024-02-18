@@ -107,12 +107,21 @@ public class Dealer implements Runnable {
     private void removeCardsFromTable() {
         while(!requestingPlayers.isEmpty()){
             Player requestingPlayer = requestingPlayers.remove();
-            int[] playerSet = table.getTokens(requestingPlayer.id);// TODO implement
+            List<Integer> playerSetList = table.getTokens(requestingPlayer.id);
+            int[] playerSet = new int[playerSetList.size()];
+            for(int i = 0; i < playerSetList.size(); i++){
+                playerSet[i] = playerSetList.get(i);
+            }
             if(env.util.testSet(playerSet)){
                 for(Integer card : playerSet){
                     table.removeCard(table.cardToSlot[card]);
-                    table.removeTokensFromSlot(table.cardToSlot[card]);//TODO implement
+                    //save all players we removed their tokens in a list
+                    List<Integer> playersInSlot = table.tokensToPlayers.get(table.cardToSlot[card]);
+                    table.removeTokensFromSlot(table.cardToSlot[card]);
                     //notify player that we removed his tokens
+                    for(Integer playerId : playersInSlot){
+                        players[playerId].notify();
+                    }
                 }
                 updateTimerDisplay(true);
                 requestingPlayer.point();
