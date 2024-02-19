@@ -8,8 +8,6 @@
       <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_13_02_2024_17_07__Changes_.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_13_02_2024_17_07__Changes_.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/bguspl/set/ex/Dealer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/bguspl/set/ex/Dealer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/bguspl/set/ex/Player.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/bguspl/set/ex/Player.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/bguspl/set/ex/Table.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/bguspl/set/ex/Table.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -70,6 +68,7 @@
       <workItem from="1708250813738" duration="2760000" />
       <workItem from="1708277751430" duration="443000" />
       <workItem from="1708279475763" duration="8171000" />
+      <workItem from="1708355713812" duration="98000" />
     </task>
     <servers />
   </component>

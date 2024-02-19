@@ -40,6 +40,8 @@ public class Dealer implements Runnable {
     private Queue<Player> requestingPlayers;
 
     private Thread[] playerThreads;
+
+    private final long SECOND = 1000;
     public Dealer(Env env, Table table, Player[] players) {
         this.env = env;
         this.table = table;
@@ -143,9 +145,9 @@ public class Dealer implements Runnable {
         Collections.shuffle(spots);
         Iterator<Integer> cards = deck.iterator();
         for(Integer spot : spots){
-            if(cards.hasNext()){
+            if(cards.hasNext()) {
                 table.placeCard(cards.next(), spot);
-                
+            }
             else{
                 break;
            }
@@ -170,7 +172,7 @@ public class Dealer implements Runnable {
     private void updateTimerDisplay(boolean reset) {
         if(reset){
             env.ui.setCountdown(env.config.turnTimeoutMillis, false);
-            reshuffleTime = System.currentTimeMillis() + env.config.turnTimeoutMillis;
+            reshuffleTime = System.currentTimeMillis() + env.config.turnTimeoutMillis + SECOND;
         }
         else{
             env.ui.setCountdown(reshuffleTime - System.currentTimeMillis(), false);
