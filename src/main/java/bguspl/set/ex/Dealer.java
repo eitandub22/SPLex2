@@ -111,7 +111,7 @@ public class Dealer implements Runnable {
         while(!requestingPlayers.isEmpty()){
             Player requestingPlayer = requestingPlayers.remove();
             List<Integer> playerSetList = table.getTokens(requestingPlayer.id);
-            if(playerSetList.size() == 3){
+            if(playerSetList.size() == this.env.config.featureSize){
                 int[] playerSet = new int[playerSetList.size()];
                 for(int i = 0; i < playerSetList.size(); i++){
                     playerSet[i] = playerSetList.get(i);
