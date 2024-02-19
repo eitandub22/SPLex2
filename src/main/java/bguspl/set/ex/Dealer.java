@@ -111,6 +111,7 @@ public class Dealer implements Runnable {
         while(!requestingPlayers.isEmpty()){
             Player requestingPlayer = requestingPlayers.remove();
             int[] playerSet = table.getTokens(requestingPlayer.id);
+            //only if the player put 3 tokens, check for removal
             if(playerSet.length == this.env.config.featureSize){
                 if(env.util.testSet(playerSet)){
                     for(Integer slot : playerSet){
@@ -141,15 +142,13 @@ public class Dealer implements Runnable {
         List<Integer> spots = table.getEmptySlots();
         Collections.shuffle(spots);
         Iterator<Integer> cards = deck.iterator();
-        synchronized (table){
-            for(Integer spot : spots){
-                if(cards.hasNext()){
-                    table.placeCard(cards.next(), spot);
-                }
-                else{
-                    break;
-                }
-            }
+        for(Integer spot : spots){
+            if(cards.hasNext()){
+                table.placeCard(cards.next(), spot);
+                
+            else{
+                break;
+           }
         }
     }
 
