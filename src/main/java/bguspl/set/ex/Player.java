@@ -70,6 +70,8 @@ public class Player implements Runnable {
      */
     private volatile long sleepFor;
 
+    private final int MINIMUM_AI_WAIT = 250;
+
     /**
      * The class constructor.
      *
@@ -114,11 +116,11 @@ public class Player implements Runnable {
             if(terminate) continue; // if the game is terminated, don't do anything else
             //if there are already 3 tokens on the table, don't place any more
             //and use them to signal the dealer to check for a set
-            if(!this.table.removeToken(this.id, currKey) && this.table.numTokens(this.id) < 3){
+            if(!this.table.removeToken(this.id, currKey) && this.table.numTokens(this.id) < this.env.config.featureSize){
                 this.table.placeToken(this.id, currKey);
             }
 
-            if(this.table.numTokens(this.id) >= 3){
+            if(this.table.numTokens(this.id) >= this.env.config.featureSize){
                 this.dealer.checkPlayerRequest(this);
                 try{
                     synchronized(this.playerThread) {this.playerThread.wait();}
@@ -155,13 +157,13 @@ public class Player implements Runnable {
             Random rnd = new java.util.Random();
             while (!terminate) {
                 synchronized(this.keyQueue){
-                    while (this.keyQueue.size() < 3 && !terminate){
+                    while (this.keyQueue.size() < this.env.config.featureSize && !terminate){
                         keyPressed(rnd.nextInt(this.env.config.tableSize));
 
                         //note: sleeping while holding the key is a bit wasefull,
                         //but the only one thread that waits for the queue to be empty is the player thread
                         //so it wont cause a thread to wait for nothing
-                        try{Thread.sleep(rnd.nextInt(500) + 500);} //This is A smart ai not a fast ai
+                        try{Thread.sleep(rnd.nextInt(1000 - MINIMUM_AI_WAIT) + MINIMUM_AI_WAIT);} //This is A smart ai not a fast ai
                         catch(InterruptedException e){}
                     }
                 }
@@ -194,7 +196,7 @@ public class Player implements Runnable {
         //if queue is full and recives input, remove the oldest input
         synchronized(this.keyQueue){
             this.keyQueue.add(slot);
-            if(this.keyQueue.size() >= 3) this.keyQueue.remove();
+            if(this.keyQueue.size() >= this.env.config.featureSize) this.keyQueue.remove();
             this.keyQueue.notifyAll();
         }
     }
