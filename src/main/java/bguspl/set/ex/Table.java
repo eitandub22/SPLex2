@@ -178,19 +178,17 @@ public class Table {
      */
     public boolean removeToken(int player, int slot) {
         synchronized(this.tokensLock){
-            int indexSlot = this.playersToTokens.get(player).indexOf(slot);
-            int indexPlayer = this.tokensToPlayers.get(slot).indexOf(player);
-            
-            if(indexSlot == -1 || indexPlayer == -1) return false;
-
-            this.playersToTokens.get(player).remove(indexSlot);
-            this.tokensToPlayers.get(slot).remove(indexPlayer);
+            if(this.playersToTokens.get(player).remove(new Integer(slot)) && 
+                this.tokensToPlayers.get(slot).remove(new Integer(player))){
+                
+                synchronized(this.env.ui){
+                    this.env.ui.removeToken(player, slot);
+                }
+                return true;
+            }
         }
 
-        synchronized(this.env.ui){
-            this.env.ui.removeToken(player, slot);
-        }
-        return true;
+        return false;
     }
 
     public List<Integer> getEmptySlots(){
@@ -225,8 +223,14 @@ public class Table {
         }
     }
 
-    public List<Integer> getTokens(int playerId){
-        return this.playersToTokens.get(playerId);
+    /**
+     * get the slot in which a player placed a token.
+     * @param playerId
+     * @return array of int representing the slots
+     */
+    public  Integer[] getTokens(int playerId){
+        List<Integer> playerTokens = this.playersToTokens.get(playerId);
+        return playerTokens.toArray(new Integer[playerTokens.size()]);
     }
 
     public void removeTokensFromSlot(int slot){
