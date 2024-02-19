@@ -228,9 +228,11 @@ public class Table {
      * @param playerId
      * @return array of int representing the slots
      */
-    public  Integer[] getTokens(int playerId){
-        List<Integer> playerTokens = this.playersToTokens.get(playerId);
-        return playerTokens.toArray(new Integer[playerTokens.size()]);
+    public  int[] getTokens(int playerId){
+        synchronized(this.tokensLock){
+            List<Integer> playerTokens = this.playersToTokens.get(playerId);
+            return playerTokens.stream().mapToInt(i -> i).toArray();
+        }
     }
 
     public void removeTokensFromSlot(int slot){
