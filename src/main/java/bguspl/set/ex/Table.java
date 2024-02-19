@@ -178,14 +178,13 @@ public class Table {
      */
     public boolean removeToken(int player, int slot) {
         synchronized(this.tokensLock){
-            int tokenIndex = this.playersToTokens.get(player).indexOf(slot);
-            if(tokenIndex == -1 || this.tokensToPlayers.isEmpty()) return false;
+            int index = this.playersToTokens.get(player).indexOf(slot);
+            if(index == -1) return false;
+            this.playersToTokens.get(player).remove(index);
 
-
-            int index = this.tokensToPlayers.get(slot).indexOf(player);
-            if(index == -1 || this.playersToTokens.isEmpty()) return false;
-            this.playersToTokens.get(player).remove(this.playersToTokens.get(player).indexOf(slot));
-            this.tokensToPlayers.get(slot).remove(this.tokensToPlayers.get(slot).indexOf(player));
+            index = this.tokensToPlayers.get(slot).indexOf(player);
+            if(index == -1) return false;
+            this.tokensToPlayers.get(slot).remove(index);
         }
 
         synchronized(this.env.ui){
@@ -196,8 +195,10 @@ public class Table {
 
     public List<Integer> getEmptySlots(){
         List<Integer> emptySlots = new ArrayList<>();
-        for (int i = 0; i < slotToCard.length; i++) {
-            if(slotToCard[i] == null) emptySlots.add(i);
+        synchronized(cardsLock){
+            for (int i = 0; i < slotToCard.length; i++) {
+                if(slotToCard[i] == null) emptySlots.add(i);
+            }
         }
         return emptySlots;
     }
@@ -208,11 +209,12 @@ public class Table {
         }
     }
 
-    public void removeAllTokens()
-    {
-        for(int i = 0; i < this.playersToTokens.size(); i++){
-            while(!this.playersToTokens.get(i).isEmpty()){
-                removeToken(i, this.playersToTokens.get(i).get(0));
+    public void removeAllTokens(){
+        synchronized(this.tokensLock){
+            for(int i = 0; i < this.playersToTokens.size(); i++){
+                while(!this.playersToTokens.get(i).isEmpty()){
+                    removeToken(i, this.playersToTokens.get(i).get(0));
+                }
             }
         }
     }
