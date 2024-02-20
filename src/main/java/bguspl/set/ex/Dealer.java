@@ -152,6 +152,7 @@ public class Dealer implements Runnable {
      * Check if any cards can be removed from the deck and placed on the table.
      */
     private void placeCardsOnTable() {
+        //TODO check if there is set in deck and table before placing cards
         List<Integer> spots = table.getEmptySlots();
         Collections.shuffle(spots);
         Iterator<Integer> cards = deck.iterator();
