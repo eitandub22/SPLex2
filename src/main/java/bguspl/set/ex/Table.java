@@ -228,10 +228,10 @@ public class Table {
      * @param playerId
      * @return array of int representing the slots
      */
-    public  int[] getTokens(int playerId){
+    public  List<Integer> getTokens(int playerId){
         synchronized(this.tokensLock){
             List<Integer> playerTokens = this.playersToTokens.get(playerId);
-            return playerTokens.stream().mapToInt(i -> i).toArray();
+            return playerTokens.stream().mapToInt(i -> i).boxed().collect(Collectors.toList());
         }
     }
 

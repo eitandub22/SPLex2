@@ -88,7 +88,7 @@ public class Player implements Runnable {
         this.human = human;
         this.keyQueue = new LinkedList<Integer>();
         this.dealer = dealer;
-        this.sleepFor = 0;
+        this.sleepFor = -1;
     }
 
     /**
@@ -109,6 +109,7 @@ public class Player implements Runnable {
                         this.keyQueue.wait();
                     }catch(InterruptedException e){}
                 }
+                if(terminate) continue; // if the game is terminated, don't do anything else
                 currKey = this.keyQueue.remove();
                 this.keyQueue.notifyAll();
                 if(!human) synchronized(this){this.notifyAll();} // tell the ai thread it can resume work
@@ -135,6 +136,8 @@ public class Player implements Runnable {
                 this.sleepFor = Math.max(0, this.sleepFor - 1000);
             }
             this.env.ui.setFreeze(this.id, this.sleepFor);
+            this.sleepFor = -1;
+
             synchronized(this.keyQueue){
                 this.keyQueue.clear();
                 synchronized (this){
@@ -170,8 +173,6 @@ public class Player implements Runnable {
                 try{
                     synchronized(this) {this.wait();}
                 }catch(InterruptedException ignored){}
-                
-                
             }
             env.logger.info("thread " + Thread.currentThread().getName() + " terminated.");
         }, "computer-" + id);

@@ -2,9 +2,14 @@ package bguspl.set.ex;
 
 import bguspl.set.Env;
 
-imimport bguspl.set.ThreadLogger;
+import bguspl.set.ThreadLogger;
 
-import java.util.*;
+import java.util.Queue;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Iterator;
+import java.util.Collections;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -72,6 +77,11 @@ public class Dealer implements Runnable {
             table.removeAllTokens();
         }
         announceWinners();
+        for(Thread playerThread : playerThreads){
+            try{
+                playerThread.join();
+            }catch(InterruptedException e){}
+        }
         env.logger.info("thread " + Thread.currentThread().getName() + " terminated.");
     }
 
@@ -93,9 +103,7 @@ public class Dealer implements Runnable {
      */
     public void terminate() {
         terminate = true;
-        for(Player p : players){
-            p.terminate();
-        }
+        Thread.currentThread().interrupt();
     }
 
     /**
@@ -111,14 +119,16 @@ public class Dealer implements Runnable {
      * Checks cards should be removed (a set) from the table and removes them.
      */
     private void removeCardsFromTable() {
-        while(!requestingPlayers.isEmpty()){
+        while(!requestingPlayers.isEmpty() && !terminate){
             Player requestingPlayer = requestingPlayers.remove();
-            int[] playerSet = table.getTokens(requestingPlayer.id);
+            List<Integer> playerTokens = table.getTokens(requestingPlayer.id);
+            int[] playerSet = playerTokens.stream().mapToInt(i -> this.table.getCardFromSlot(i)).toArray();
             //only if the player put 3 tokens, check for removal
             if(playerSet.length == this.env.config.featureSize){
                 if(env.util.testSet(playerSet)){
-                    for(Integer slot : playerSet){
+                    for(Integer slot : playerTokens){
                         table.removeCard(slot);
+                        //this.deck.remove(this.deck.indexOf(slot));
                         List<Integer> playersInSlot = table.tokensToPlayers.get(slot);
                         table.removeTokensFromSlot(slot);
                         for(Integer playerId : playersInSlot){
@@ -146,8 +156,8 @@ public class Dealer implements Runnable {
         Collections.shuffle(spots);
         Iterator<Integer> cards = deck.iterator();
         for(Integer spot : spots){
-            if(cards.hasNext()) {
-                table.placeCard(cards.next(), spot);
+            if(!this.deck.isEmpty()){
+                this.table.placeCard(this.deck.remove(0), spot);
             }
             else{
                 break;
