@@ -1,7 +1,8 @@
 package bguspl.set.ex;
 
 import bguspl.set.Env;
-import bguspl.set.ThreadLogger;
+
+imimport bguspl.set.ThreadLogger;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -145,7 +146,7 @@ public class Dealer implements Runnable {
         for(Integer spot : spots){
             if(cards.hasNext()){
                 table.placeCard(cards.next(), spot);
-                
+            }
             else{
                 break;
            }
