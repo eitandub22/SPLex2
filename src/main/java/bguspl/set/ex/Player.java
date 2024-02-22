@@ -109,12 +109,11 @@ public class Player implements Runnable {
                         this.keyQueue.wait();
                     }catch(InterruptedException e){}
                 }
-                if(terminate) continue; // if the game is terminated, don't do anything else
+                if(terminate) break; // if the game is terminated, don't do anything else
                 currKey = this.keyQueue.remove();
                 this.keyQueue.notifyAll();
                 if(!human) synchronized(this){this.notifyAll();} // tell the ai thread it can resume work
             }
-            if(terminate) continue; // if the game is terminated, don't do anything else
             //if there are already 3 tokens on the table, don't place any more
             //and use them to signal the dealer to check for a set
             if(!this.table.removeToken(this.id, currKey) && this.table.numTokens(this.id) < this.env.config.featureSize){
@@ -125,18 +124,20 @@ public class Player implements Runnable {
                 this.dealer.checkPlayerRequest(this);
                 try{
                     synchronized(this.playerThread) {this.playerThread.wait();}
-                }catch(InterruptedException e){}
+                }catch(InterruptedException e){break;}
             }
 
             while(this.sleepFor > 0){
                 this.env.ui.setFreeze(this.id, this.sleepFor);
                 try{
                     playerThread.sleep(Math.min(1000, this.sleepFor));
-                }catch(InterruptedException egnored){}
+                }catch(InterruptedException egnored){break;}
                 this.sleepFor = Math.max(0, this.sleepFor - 1000);
             }
-            this.env.ui.setFreeze(this.id, this.sleepFor);
-            this.sleepFor = -1;
+            if(this.sleepFor == 0){
+                this.env.ui.setFreeze(this.id, this.sleepFor);
+                this.sleepFor = -1;
+            }
 
             synchronized(this.keyQueue){
                 this.keyQueue.clear();
@@ -191,7 +192,7 @@ public class Player implements Runnable {
         //if queue is full and recives input, remove the oldest input
         synchronized(this.keyQueue){
             this.keyQueue.add(slot);
-            if(this.keyQueue.size() >= this.env.config.featureSize) this.keyQueue.remove();
+            if(this.keyQueue.size() > this.env.config.featureSize) this.keyQueue.remove();
             this.keyQueue.notifyAll();
         }
     }

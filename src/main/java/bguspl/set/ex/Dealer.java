@@ -66,6 +66,7 @@ public class Dealer implements Runnable {
         env.logger.info("thread " + Thread.currentThread().getName() + " starting.");
         for(Player player : players){
             ThreadLogger playerThread = new ThreadLogger(player, Integer.toString(player.id), env.logger);
+            playerThreads[player.id] = playerThread;
             playerThread.startWithLog();
         }
         while (!shouldFinish()) {
@@ -76,10 +77,13 @@ public class Dealer implements Runnable {
             removeAllCardsFromTable();
             table.removeAllTokens();
         }
+        System.out.println("before join");
         announceWinners();
         for(Thread playerThread : playerThreads){
             try{
-                playerThread.join();
+                if(playerThread != null){
+                    playerThread.join();
+                }
             }catch(InterruptedException e){}
         }
         env.logger.info("thread " + Thread.currentThread().getName() + " terminated.");
@@ -103,7 +107,9 @@ public class Dealer implements Runnable {
      */
     public void terminate() {
         terminate = true;
-        Thread.currentThread().interrupt();
+        for(Player player : players){
+            player.terminate();
+        }
     }
 
     /**
@@ -143,7 +149,7 @@ public class Dealer implements Runnable {
                 }
             }
             else{
-                playerThreads[requestingPlayer.id].notifyAll();
+                if(playerThreads[requestingPlayer.id] != null) playerThreads[requestingPlayer.id].notifyAll();
             }
         }
     }
