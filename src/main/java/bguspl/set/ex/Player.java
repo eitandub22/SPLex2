@@ -109,7 +109,7 @@ public class Player implements Runnable {
                 }
                 currKey = this.keyQueue.remove();
                 this.keyQueue.notifyAll();
-                if(!human) synchronized(this){this.notifyAll();} // tell the ai thread it can resume work
+                synchronized(this){this.notifyAll();} // tell the ai thread it can resume work
             }
             if(terminate) continue; // if the game is terminated, don't do anything else
             //if there are already 3 tokens on the table, don't place any more

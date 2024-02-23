@@ -224,7 +224,9 @@ public class Table {
     }
 
     public List<Integer> getTokens(int playerId){
-        return this.playersToTokens.get(playerId);
+        synchronized(this.tokensLock){
+            return this.playersToTokens.get(playerId).stream().collect(Collectors.toList());
+        }
     }
 
     public void removeTokensFromSlot(int slot){
