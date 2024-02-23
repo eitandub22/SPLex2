@@ -185,19 +185,14 @@ public class Dealer implements Runnable {
      * Returns all the cards from the table to the deck.
      */
     private void removeAllCardsFromTable() {
-        int slotsNum = env.config.columns * env.config.rows;
+        int slotsNum = env.config.tableSize;
         synchronized (table) {
             for (int i = 0; i < slotsNum; i++) {
                 deck.add(table.getCardFromSlot(i));
                 table.removeCard(i);
+                table.removeTokensFromSlot(i);
             }
         }
-        synchronized (env.ui){
-            for (int i = 0; i < slotsNum; i++) {
-                env.ui.removeCard(i);
-            }
-        }
-        Collections.shuffle(deck);
     }
 
     /**
