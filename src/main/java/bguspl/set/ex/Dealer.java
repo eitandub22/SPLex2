@@ -110,12 +110,9 @@ public class Dealer implements Runnable {
     private void removeCardsFromTable() {
         while(!requestingPlayers.isEmpty()){
             Player requestingPlayer = requestingPlayers.remove();
-            List<Integer> playerSetList = table.getTokens(requestingPlayer.id);
-            if(playerSetList.size() == 3){
-                int[] playerSet = new int[playerSetList.size()];
-                for(int i = 0; i < playerSetList.size(); i++){
-                    playerSet[i] = playerSetList.get(i);
-                }
+            List<Integer> playerTokens = table.getTokens(requestingPlayer.id);
+            if(playerTokens.size() == 3){
+                int[] playerSet = playerTokens.stream().mapToInt(i -> this.table.getCardFromSlot((i))).toArray();
                 if(env.util.testSet(playerSet)){
                     for(Integer slot : playerSet){
                         table.removeCard(slot);
