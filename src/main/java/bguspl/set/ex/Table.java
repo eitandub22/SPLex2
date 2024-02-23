@@ -208,15 +208,6 @@ public class Table {
         }
     }
 
-    public void removeAllTokens()
-    {
-        for(int i = 0; i < this.playersToTokens.size(); i++){
-            while(!this.playersToTokens.get(i).isEmpty()){
-                removeToken(i, this.playersToTokens.get(i).get(0));
-            }
-        }
-    }
-
     public int numTokens(int player){
         synchronized(this.tokensLock){
             return this.playersToTokens.get(player).size();
