@@ -86,7 +86,7 @@ public class Player implements Runnable {
         this.human = human;
         this.keyQueue = new LinkedList<Integer>();
         this.dealer = dealer;
-        this.sleepFor = 0;
+        this.sleepFor = -1;
     }
 
     /**
@@ -132,8 +132,11 @@ public class Player implements Runnable {
                 }catch(InterruptedException egnored){}
                 this.sleepFor = Math.max(0, this.sleepFor - 1000);
             }
-            this.env.ui.setFreeze(this.id, this.sleepFor);
-            synchronized(this.keyQueue){
+            if(this.sleepFor == 0){
+                this.env.ui.setFreeze(this.id, this.sleepFor);
+                this.sleepFor = -1;
+            }
+                synchronized(this.keyQueue){
                 this.keyQueue.clear();
                 synchronized (this){
                     this.notifyAll();
