@@ -4,6 +4,7 @@ import bguspl.set.Env;
 import bguspl.set.ThreadLogger;
 
 import java.util.*;
+import java.util.concurrent.Semaphore;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -37,6 +38,7 @@ public class Dealer implements Runnable {
      * The time when the dealer needs to reshuffle the deck due to turn timeout.
      */
     private long reshuffleTime = Long.MAX_VALUE;
+    private Semaphore requestingPlayersSemaphore = new Semaphore(1);
     private Queue<Player> requestingPlayers;
 
     private Thread[] playerThreads;
@@ -108,19 +110,17 @@ public class Dealer implements Runnable {
      * Checks cards should be removed (a set) from the table and removes them.
      */
     private void removeCardsFromTable() {
+        try{this.requestingPlayersSemaphore.acquire();} catch (InterruptedException e){}
         while(!requestingPlayers.isEmpty()){
             Player requestingPlayer = requestingPlayers.remove();
+            this.requestingPlayersSemaphore.release();
             List<Integer> playerTokens = table.getTokens(requestingPlayer.id);
             if(playerTokens.size() == 3){
                 int[] playerSet = playerTokens.stream().mapToInt(i -> this.table.getCardFromSlot((i))).toArray();
                 if(env.util.testSet(playerSet)){
                     for(Integer slot : playerSet){
                         table.removeCard(slot);
-                        List<Integer> playersInSlot = table.tokensToPlayers.get(slot);
                         table.removeTokensFromSlot(slot);
-                        for(Integer playerId : playersInSlot){
-                            playerThreads[playerId].notifyAll();
-                        }
                     }
                     updateTimerDisplay(true);
                     requestingPlayer.point();
@@ -132,7 +132,9 @@ public class Dealer implements Runnable {
             else{
                 playerThreads[requestingPlayer.id].notifyAll();
             }
+            try{this.requestingPlayersSemaphore.acquire();} catch (InterruptedException e){}
         }
+        this.requestingPlayersSemaphore.release();
     }
 
     /**
@@ -218,7 +220,10 @@ public class Dealer implements Runnable {
     }
 
     public void checkPlayerRequest(Player player){
+        try{this.requestingPlayersSemaphore.acquire();} catch (InterruptedException e){}
         requestingPlayers.add(player);
+        this.requestingPlayersSemaphore.release();
+
         synchronized (requestingPlayers){
             requestingPlayers.notifyAll();
         }
