@@ -155,7 +155,7 @@ public class Dealer implements Runnable {
     private void sleepUntilWokenOrTimeout() {
         try{
             synchronized (requestingPlayers){
-                requestingPlayers.wait(1000);
+                requestingPlayers.wait(this.reshuffleTime-System.currentTimeMillis() <= this.env.config.turnTimeoutWarningMillis ? 100 : 1000);
             }
         }
         catch (InterruptedException e){}
@@ -165,6 +165,7 @@ public class Dealer implements Runnable {
      * Reset and/or update the countdown and the countdown display.
      */
     private void updateTimerDisplay(boolean reset) {
+        if(terminate) return;
         if(reset){
             env.ui.setCountdown(env.config.turnTimeoutMillis, false);
             reshuffleTime = System.currentTimeMillis() + env.config.turnTimeoutMillis;

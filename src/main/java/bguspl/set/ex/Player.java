@@ -109,16 +109,13 @@ public class Player implements Runnable {
                 }
                 currKey = this.keyQueue.remove();
                 this.keyQueue.notifyAll();
-                synchronized(this){this.notifyAll();} // tell the ai thread it can resume work
             }
-            if(terminate) continue; // if the game is terminated, don't do anything else
-            //if there are already 3 tokens on the table, don't place any more
-            //and use them to signal the dealer to check for a set
-            if(!this.table.removeToken(this.id, currKey) && this.table.numTokens(this.id) < 3){
+            if(terminate) continue;
+            if(!this.table.removeToken(this.id, currKey) && this.table.numTokens(this.id) < this.env.config.featureSize){
                 this.table.placeToken(this.id, currKey);
             }
 
-            if(this.table.numTokens(this.id) >= 3){
+            if(this.table.numTokens(this.id) >= this.env.config.featureSize){
                 this.dealer.checkPlayerRequest(this);
                 try{
                     synchronized(this.playerThread) {this.playerThread.wait();}
@@ -139,7 +136,7 @@ public class Player implements Runnable {
             synchronized(this.keyQueue){
                 this.keyQueue.clear();
                 synchronized (this){
-                    this.notifyAll();
+                    this.notifyAll();//tell the ai to resume work
                 }
             }
         }

@@ -106,9 +106,11 @@ public class Table {
     public int countCards() {
         int cards = 0;
         synchronized(cardsLock){
-            for (Integer card : slotToCard)
-                if (card != null)
+            for (Integer card : slotToCard){
+                if (card != null){
                     ++cards;
+                }
+            }
         }
         return cards;
     }
@@ -130,9 +132,7 @@ public class Table {
             slotToCard[slot] = card;
         }
 
-        synchronized(this.env.ui){
-            env.ui.placeCard(card, slot);
-        }
+        env.ui.placeCard(card, slot);
     }
 
     /**
@@ -149,9 +149,7 @@ public class Table {
             slotToCard[slot] = null;
         }
         
-        synchronized(this.env.ui){
-            env.ui.removeCard(slot);
-        }
+        env.ui.removeCard(slot);
     }
 
     /**
@@ -167,9 +165,7 @@ public class Table {
             this.tokensToPlayers.get(slot).add(player);
         }
 
-        synchronized(this.env.ui){
-            this.env.ui.placeToken(player, slot);
-        }
+        this.env.ui.placeToken(player, slot);
     }
  
     /**
@@ -190,9 +186,7 @@ public class Table {
             this.tokensToPlayers.get(slot).remove(this.tokensToPlayers.get(slot).indexOf(player));
         }
 
-        synchronized(this.env.ui){
-            this.env.ui.removeToken(player, slot);
-        }
+        this.env.ui.removeToken(player, slot);
         return true;
     }
 
