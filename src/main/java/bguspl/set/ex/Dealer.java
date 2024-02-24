@@ -178,12 +178,10 @@ public class Dealer implements Runnable {
      */
     private void removeAllCardsFromTable() {
         int slotsNum = env.config.tableSize;
-        synchronized (table) {
-            for (int i = 0; i < slotsNum; i++) {
-                deck.add(table.getCardFromSlot(i));
-                table.removeCard(i);
-                table.removeTokensFromSlot(i);
-            }
+        for (int i = 0; i < slotsNum; i++) {
+            deck.add(table.getCardFromSlot(i));
+            table.removeCard(i);
+            table.removeTokensFromSlot(i);
         }
     }
 
