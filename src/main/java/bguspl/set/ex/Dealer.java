@@ -145,11 +145,8 @@ public class Dealer implements Runnable {
      * Check if any cards can be removed from the deck and placed on the table.
      */
     private void placeCardsOnTable() {
-        List<Integer> spots = table.getEmptySlots();
         Collections.shuffle(deck);
-        while(!spots.isEmpty() && !deck.isEmpty()){
-            table.placeCard(this.deck.remove(0), spots.remove(0));
-        }
+        this.table.placeCards(deck);
     }
 
     /**

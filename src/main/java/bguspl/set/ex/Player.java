@@ -108,7 +108,9 @@ public class Player implements Runnable {
                     }catch(InterruptedException e){}
                 }
                 currKey = this.keyQueue.remove();
-                this.keyQueue.notifyAll();
+                synchronized (this){
+                    this.notifyAll();//tell the ai to resume work
+                }           
             }
             if(terminate) break;
             if(!this.table.removeToken(this.id, currKey) && this.table.numTokens(this.id) < this.env.config.featureSize){
@@ -189,7 +191,7 @@ public class Player implements Runnable {
         //if queue is full and recives input, remove the oldest input
         synchronized(this.keyQueue){
             this.keyQueue.add(slot);
-            if(this.keyQueue.size() >= this.env.config.featureSize) this.keyQueue.remove();
+            if(this.keyQueue.size() > this.env.config.featureSize) this.keyQueue.remove();
             this.keyQueue.notifyAll();
         }
     }

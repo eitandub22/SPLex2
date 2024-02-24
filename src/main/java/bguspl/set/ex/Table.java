@@ -225,4 +225,13 @@ public class Table {
             }
         }
     }
+
+    public void placeCards(List<Integer> cards){
+        synchronized(this.cardsLock){
+            List<Integer> spots = getEmptySlots();
+            while(!spots.isEmpty() && !cards.isEmpty()){
+                placeCard(cards.remove(0), spots.remove(0));
+            }
+        }
+    }
 }
