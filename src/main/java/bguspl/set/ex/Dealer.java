@@ -156,8 +156,10 @@ public class Dealer implements Runnable {
      */
     private void sleepUntilWokenOrTimeout() {
         try{
+            long timeLeft = reshuffleTime - System.currentTimeMillis();
             synchronized (requestingPlayers){
-                requestingPlayers.wait(1000);//sleep for a second and then update the timer or until a player wants to check a set
+                if(timeLeft <= this.env.config.turnTimeoutWarningMillis) requestingPlayers.wait(100);
+                else requestingPlayers.wait(1000);
             }
         }
         catch (InterruptedException e){}
@@ -172,7 +174,8 @@ public class Dealer implements Runnable {
             reshuffleTime = System.currentTimeMillis() + env.config.turnTimeoutMillis;
         }
         else{
-            env.ui.setCountdown(reshuffleTime - System.currentTimeMillis(), false);
+            long timeLeft = reshuffleTime - System.currentTimeMillis();
+            env.ui.setCountdown(timeLeft, timeLeft <= this.env.config.turnTimeoutWarningMillis);
         }
     }
 
