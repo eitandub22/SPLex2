@@ -70,6 +70,10 @@ public class Dealer implements Runnable {
             removeAllCardsFromTable();
         }
         announceWinners();
+
+        for(Player p : players){
+            try{this.playerThreads[p.id].join();} catch (InterruptedException e){}
+        }
         env.logger.info("thread " + Thread.currentThread().getName() + " terminated.");
     }
 
@@ -93,7 +97,6 @@ public class Dealer implements Runnable {
         terminate = true;
         for(Player p : players){
             p.terminate();
-            try{this.playerThreads[p.id].join();} catch (InterruptedException e){}
         }
     }
 
@@ -192,6 +195,7 @@ public class Dealer implements Runnable {
      * Check who is/are the winner/s and displays them.
      */
     private void announceWinners() {
+        if(terminate) return;
         int maxScore = -1;
         List<Integer> winners = new ArrayList<>();
         for (Player p : players){

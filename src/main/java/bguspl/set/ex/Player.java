@@ -110,7 +110,7 @@ public class Player implements Runnable {
                 currKey = this.keyQueue.remove();
                 this.keyQueue.notifyAll();
             }
-            if(terminate) continue;
+            if(terminate) break;
             if(!this.table.removeToken(this.id, currKey) && this.table.numTokens(this.id) < this.env.config.featureSize){
                 this.table.placeToken(this.id, currKey);
             }
