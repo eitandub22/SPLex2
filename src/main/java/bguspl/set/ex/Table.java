@@ -160,6 +160,8 @@ public class Table {
      * @param slot   - the slot on which to place the token.
      */
     public void placeToken(int player, int slot) {
+        synchronized(cardsLock){if(this.slotToCard[slot] == null) return;}//cant put tokn on empty slot
+        
         synchronized(this.tokensLock){
             this.playersToTokens.get(player).add(slot);
             this.tokensToPlayers.get(slot).add(player);
