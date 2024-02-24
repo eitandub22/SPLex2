@@ -60,6 +60,7 @@ public class Dealer implements Runnable {
         env.logger.info("thread " + Thread.currentThread().getName() + " starting.");
         for(Player player : players){
             ThreadLogger playerThread = new ThreadLogger(player, Integer.toString(player.id), env.logger);
+            this.playerThreads[player.id] = playerThread;
             playerThread.startWithLog();
         }
         while (!shouldFinish()) {
@@ -113,8 +114,8 @@ public class Dealer implements Runnable {
             Player requestingPlayer = requestingPlayers.remove();
             this.requestingPlayersSemaphore.release();
 
-            List<Integer> playerTokens = table.getTokens(requestingPlayer.id);
-            if(playerTokens.size() == 3){
+            if(this.table.numTokens(requestingPlayer.id) == 3){
+                List<Integer> playerTokens = table.getTokens(requestingPlayer.id);
                 int[] playerSet = playerTokens.stream().mapToInt(i -> this.table.getCardFromSlot((i))).toArray();
                 if(env.util.testSet(playerSet)){
                     for(Integer slot : playerTokens){
@@ -129,7 +130,7 @@ public class Dealer implements Runnable {
                 }
             }
             else{
-                playerThreads[requestingPlayer.id].notifyAll();
+                synchronized(playerThreads[requestingPlayer.id]){playerThreads[requestingPlayer.id].notifyAll();}
             }
             try{this.requestingPlayersSemaphore.acquire();} catch (InterruptedException e){}
         }

@@ -136,7 +136,7 @@ public class Player implements Runnable {
                 this.env.ui.setFreeze(this.id, this.sleepFor);
                 this.sleepFor = -1;
             }
-                synchronized(this.keyQueue){
+            synchronized(this.keyQueue){
                 this.keyQueue.clear();
                 synchronized (this){
                     this.notifyAll();
@@ -178,6 +178,7 @@ public class Player implements Runnable {
      */
     public void terminate() {
         this.terminate = true;
+        this.keyQueue.add(0);
         if(!human) aiThread.interrupt();
         playerThread.interrupt();
     }
