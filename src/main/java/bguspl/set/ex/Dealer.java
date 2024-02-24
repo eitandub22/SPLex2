@@ -117,7 +117,7 @@ public class Dealer implements Runnable {
             if(playerTokens.size() == 3){
                 int[] playerSet = playerTokens.stream().mapToInt(i -> this.table.getCardFromSlot((i))).toArray();
                 if(env.util.testSet(playerSet)){
-                    for(Integer slot : playerSet){
+                    for(Integer slot : playerTokens){
                         table.removeCard(slot);
                         table.removeTokensFromSlot(slot);
                     }
