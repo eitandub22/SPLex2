@@ -114,6 +114,7 @@ public class Dealer implements Runnable {
         while(!requestingPlayers.isEmpty()){
             Player requestingPlayer = requestingPlayers.remove();
             this.requestingPlayersSemaphore.release();
+
             List<Integer> playerTokens = table.getTokens(requestingPlayer.id);
             if(playerTokens.size() == 3){
                 int[] playerSet = playerTokens.stream().mapToInt(i -> this.table.getCardFromSlot((i))).toArray();
@@ -141,17 +142,11 @@ public class Dealer implements Runnable {
      * Check if any cards can be removed from the deck and placed on the table.
      */
     private void placeCardsOnTable() {
-        //TODO check if there is set in table
         List<Integer> spots = table.getEmptySlots();
         Collections.shuffle(spots);
         synchronized (table){
-            for(Integer spot : spots){
-                if(!deck.isEmpty()){
-                    table.placeCard(this.deck.remove(0), spot);
-                }
-                else{
-                    break;
-                }
+            while(!spots.isEmpty() && !deck.isEmpty()){
+                table.placeCard(this.deck.remove(0), spots.remove(0));
             }
         }
     }
