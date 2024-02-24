@@ -158,7 +158,7 @@ public class Player implements Runnable {
             Random rnd = new java.util.Random();
             while (!terminate) {
                 synchronized(this.keyQueue){
-                    while (this.keyQueue.size() < 3 && !terminate){
+                    while (this.keyQueue.size() < this.env.config.featureSize && !terminate){
                         keyPressed(rnd.nextInt(this.env.config.tableSize));
                     }
                 }
@@ -192,7 +192,7 @@ public class Player implements Runnable {
         //if queue is full and recives input, remove the oldest input
         synchronized(this.keyQueue){
             this.keyQueue.add(slot);
-            if(this.keyQueue.size() >= 3) this.keyQueue.remove();
+            if(this.keyQueue.size() >= this.env.config.featureSize) this.keyQueue.remove();
             this.keyQueue.notifyAll();
         }
     }
