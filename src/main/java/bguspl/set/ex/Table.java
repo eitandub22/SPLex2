@@ -196,8 +196,10 @@ public class Table {
 
     public List<Integer> getEmptySlots(){
         List<Integer> emptySlots = new ArrayList<>();
-        for (int i = 0; i < slotToCard.length; i++) {
-            if(slotToCard[i] == null) emptySlots.add(i);
+        synchronized(cardsLock){
+            for (int i = 0; i < slotToCard.length; i++) {
+                if(slotToCard[i] == null) emptySlots.add(i);
+            }
         }
         return emptySlots;
     }

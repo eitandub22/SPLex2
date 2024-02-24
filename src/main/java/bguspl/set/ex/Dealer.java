@@ -63,12 +63,10 @@ public class Dealer implements Runnable {
             playerThread.startWithLog();
         }
         while (!shouldFinish()) {
-            Collections.shuffle(deck);
             placeCardsOnTable();
             timerLoop();
             updateTimerDisplay(true);
             removeAllCardsFromTable();
-            table.removeAllTokens();
         }
         announceWinners();
         env.logger.info("thread " + Thread.currentThread().getName() + " terminated.");
@@ -143,11 +141,9 @@ public class Dealer implements Runnable {
      */
     private void placeCardsOnTable() {
         List<Integer> spots = table.getEmptySlots();
-        Collections.shuffle(spots);
-        synchronized (table){
-            while(!spots.isEmpty() && !deck.isEmpty()){
-                table.placeCard(this.deck.remove(0), spots.remove(0));
-            }
+        Collections.shuffle(deck);
+        while(!spots.isEmpty() && !deck.isEmpty()){
+            table.placeCard(this.deck.remove(0), spots.remove(0));
         }
     }
 
@@ -156,10 +152,8 @@ public class Dealer implements Runnable {
      */
     private void sleepUntilWokenOrTimeout() {
         try{
-            long timeLeft = reshuffleTime - System.currentTimeMillis();
             synchronized (requestingPlayers){
-                if(timeLeft <= this.env.config.turnTimeoutWarningMillis) requestingPlayers.wait(100);
-                else requestingPlayers.wait(1000);
+                requestingPlayers.wait(1000);
             }
         }
         catch (InterruptedException e){}
