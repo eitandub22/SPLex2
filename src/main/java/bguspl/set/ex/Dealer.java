@@ -118,7 +118,7 @@ public class Dealer implements Runnable {
             Player requestingPlayer = requestingPlayers.remove();
             this.requestingPlayersSemaphore.release();
 
-            if(this.table.numTokens(requestingPlayer.id) == 3){
+            if(this.table.numTokens(requestingPlayer.id) == this.env.config.featureSize){
                 List<Integer> playerTokens = table.getTokens(requestingPlayer.id);
                 int[] playerSet = playerTokens.stream().mapToInt(i -> this.table.getCardFromSlot((i))).toArray();
                 if(env.util.testSet(playerSet)){
@@ -145,9 +145,10 @@ public class Dealer implements Runnable {
      * Check if any cards can be removed from the deck and placed on the table.
      */
     private void placeCardsOnTable() {
+        int preDeckSize = deck.size();
         Collections.shuffle(deck);
         this.table.placeCards(deck);
-        if(this.env.config.hints) this.table.hints();
+        if(this.env.config.hints && preDeckSize != this.deck.size()) this.table.hints();
     }
 
     /**
