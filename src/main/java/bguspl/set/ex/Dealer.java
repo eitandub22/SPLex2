@@ -213,9 +213,8 @@ public class Dealer implements Runnable {
     public void checkPlayerRequest(Player player){
         try{this.requestingPlayersSemaphore.acquire();} catch (InterruptedException e){}
         requestingPlayers.add(player);
-        this.requestingPlayersSemaphore.release();
-
         synchronized (requestingPlayers){
+            this.requestingPlayersSemaphore.release();
             requestingPlayers.notifyAll();
         }
     }
