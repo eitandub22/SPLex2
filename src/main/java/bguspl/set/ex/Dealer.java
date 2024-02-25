@@ -147,6 +147,7 @@ public class Dealer implements Runnable {
     private void placeCardsOnTable() {
         Collections.shuffle(deck);
         this.table.placeCards(deck);
+        if(this.env.config.hints) this.table.hints();
     }
 
     /**
