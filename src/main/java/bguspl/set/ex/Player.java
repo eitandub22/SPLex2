@@ -118,10 +118,7 @@ public class Player implements Runnable {
             }
 
             if(this.table.numTokens(this.id) >= this.env.config.featureSize){
-                this.dealer.checkPlayerRequest(this);
-                try{
-                    synchronized(this.playerThread) {this.playerThread.wait();}
-                }catch(InterruptedException e){}
+                this.dealer.checkPlayerRequest(this);  
             }
 
             while(this.sleepFor > 0){

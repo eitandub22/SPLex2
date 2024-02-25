@@ -202,6 +202,7 @@ public class Table {
 
     public int getCardFromSlot(int slot){
         synchronized (cardsLock){
+            if(slotToCard[slot] == null) return -1;
             return slotToCard[slot];
         }
     }

@@ -214,8 +214,14 @@ public class Dealer implements Runnable {
         try{this.requestingPlayersSemaphore.acquire();} catch (InterruptedException e){}
         requestingPlayers.add(player);
         synchronized (requestingPlayers){
-            this.requestingPlayersSemaphore.release();
             requestingPlayers.notifyAll();
+        }
+
+        synchronized(this.playerThreads[player.id]) {
+            this.requestingPlayersSemaphore.release();
+            try{
+                this.playerThreads[player.id].wait();
+            }catch(InterruptedException e){}
         }
     }
 }
