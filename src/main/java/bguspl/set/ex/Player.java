@@ -121,6 +121,7 @@ public class Player implements Runnable {
                 this.dealer.checkPlayerRequest(this);  
             }
 
+            if(terminate) break;
             while(this.sleepFor > 0){
                 this.env.ui.setFreeze(this.id, this.sleepFor);
                 try{
