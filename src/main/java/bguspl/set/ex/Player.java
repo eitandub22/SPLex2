@@ -2,6 +2,8 @@ package bguspl.set.ex;
 
 import bguspl.set.Env;
 
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Random;
@@ -63,7 +65,7 @@ public class Player implements Runnable {
     /**
      * Queue of keys pressed.
      */
-    private Queue<Integer> keyQueue;
+    private BlockingQueue<Integer> keyQueue;
     
     /**
      * Time the player needs to sleep after checking set
@@ -84,7 +86,7 @@ public class Player implements Runnable {
         this.table = table;
         this.id = id;
         this.human = human;
-        this.keyQueue = new LinkedList<Integer>();
+        this.keyQueue = new ArrayBlockingQueue<Integer>(3);
         this.dealer = dealer;
         this.sleepFor = -1;
     }
@@ -100,17 +102,9 @@ public class Player implements Runnable {
 
         int currKey = 0;
         while (!terminate) {
-            synchronized(keyQueue){
-                //wait for queue to have an input to process
-                while(this.keyQueue.size() == 0 && !terminate){
-                    try{
-                        this.keyQueue.wait();
-                    }catch(InterruptedException e){}
-                }
+            synchronized(this){
                 currKey = this.keyQueue.remove();
-                synchronized (this){
-                    this.notifyAll();//tell the ai to resume work
-                }           
+                this.notifyAll();
             }
             if(terminate) break;
             if(!this.table.removeToken(this.id, currKey) && this.table.numTokens(this.id) < this.env.config.featureSize){
@@ -133,11 +127,9 @@ public class Player implements Runnable {
                 this.env.ui.setFreeze(this.id, this.sleepFor);
                 this.sleepFor = -1;
             }
-            synchronized(this.keyQueue){
+            synchronized(this){
                 this.keyQueue.clear();
-                synchronized (this){
-                    this.notifyAll();//tell the ai to resume work
-                }
+                this.notifyAll();//tell the ai to resume work
             }
         }
         if (!human) try { aiThread.join(); } catch (InterruptedException ignored) {}
@@ -154,10 +146,8 @@ public class Player implements Runnable {
             env.logger.info("thread " + Thread.currentThread().getName() + " starting.");
             Random rnd = new java.util.Random();
             while (!terminate) {
-                synchronized(this.keyQueue){
-                    while (this.keyQueue.size() < this.env.config.featureSize && !terminate){
-                        keyPressed(rnd.nextInt(this.env.config.tableSize));
-                    }
+                while (this.keyQueue.size() < this.env.config.featureSize && !terminate){
+                    keyPressed(rnd.nextInt(this.env.config.tableSize));
                 }
                 try{
                     synchronized(this) {this.wait();}
@@ -186,12 +176,7 @@ public class Player implements Runnable {
      * @param slot - the slot corresponding to the key pressed.
      */
     public void keyPressed(int slot) {
-        //if queue is full and recives input, remove the oldest input
-        synchronized(this.keyQueue){
-            this.keyQueue.add(slot);
-            if(this.keyQueue.size() > this.env.config.featureSize) this.keyQueue.remove();
-            this.keyQueue.notifyAll();
-        }
+        this.keyQueue.add(slot);
     }
 
     /**
