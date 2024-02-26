@@ -183,7 +183,11 @@ public class Dealer implements Runnable {
      */
     private void removeAllCardsFromTable() {
         int slotsNum = env.config.tableSize;
+        int currCard = 0;
         for (int i = 0; i < slotsNum; i++) {
+            currCard = table.getCardFromSlot(i);
+            if(currCard == -1) continue;
+            
             deck.add(table.getCardFromSlot(i));
             table.removeCard(i);
             table.removeTokensFromSlot(i);
