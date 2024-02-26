@@ -145,6 +145,7 @@ public class Table {
         } catch (InterruptedException ignored) {}
 
         synchronized(cardsLock){
+            if(slotToCard[slot] == null) return; //no card to remove
             cardToSlot[slotToCard[slot]] = null;
             slotToCard[slot] = null;
         }

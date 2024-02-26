@@ -102,12 +102,18 @@ public class Player implements Runnable {
 
         int currKey = 0;
         while (!terminate) {
+            try{currKey = this.keyQueue.take();}catch(InterruptedException egnored){}
             synchronized(this){
-                try{currKey = this.keyQueue.take();}catch(InterruptedException egnored){}
                 this.notifyAll();
             }
             if(terminate) break;
-            if(!this.table.removeToken(this.id, currKey) && this.table.numTokens(this.id) < this.env.config.featureSize){
+
+            //automaticly remove token if there are 3
+            if(this.table.numTokens(this.id) >= this.env.config.featureSize){
+                this.table.removeToken(this.id, this.table.getTokens(this.id).get(0));
+            }
+
+            if(!this.table.removeToken(this.id, currKey)){
                 this.table.placeToken(this.id, currKey);
             }
 
@@ -152,8 +158,6 @@ public class Player implements Runnable {
                 try{
                     synchronized(this) {this.wait();}
                 }catch(InterruptedException ignored){}
-                
-                
             }
             env.logger.info("thread " + Thread.currentThread().getName() + " terminated.");
         }, "computer-" + id);
