@@ -133,8 +133,9 @@ public class Player implements Runnable {
                 this.env.ui.setFreeze(this.id, this.sleepFor);
                 this.sleepFor = -1;
             }
+            
+            this.keyQueue.clear();
             synchronized(this){
-                this.keyQueue.clear();
                 this.notifyAll();//tell the ai to resume work
             }
         }
@@ -152,12 +153,14 @@ public class Player implements Runnable {
             env.logger.info("thread " + Thread.currentThread().getName() + " starting.");
             Random rnd = new java.util.Random();
             while (!terminate) {
-                while (this.keyQueue.size() < this.env.config.featureSize && !terminate){
-                    keyPressed(rnd.nextInt(this.env.config.tableSize));
+                synchronized(this){
+                    while (this.keyQueue.size() < this.env.config.featureSize && !terminate){
+                        keyPressed(rnd.nextInt(this.env.config.tableSize));
+                    }
+                    try{
+                        this.wait();
+                    }catch(InterruptedException ignored){}
                 }
-                try{
-                    synchronized(this) {this.wait();}
-                }catch(InterruptedException ignored){}
             }
             env.logger.info("thread " + Thread.currentThread().getName() + " terminated.");
         }, "computer-" + id);
