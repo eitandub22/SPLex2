@@ -103,7 +103,7 @@ public class Player implements Runnable {
         int currKey = 0;
         while (!terminate) {
             synchronized(this){
-                currKey = this.keyQueue.remove();
+                try{currKey = this.keyQueue.take();}catch(InterruptedException egnored){}
                 this.notifyAll();
             }
             if(terminate) break;
@@ -165,7 +165,6 @@ public class Player implements Runnable {
      */
     public void terminate() {
         this.terminate = true;
-        this.keyQueue.add(0);
         if(!human) aiThread.interrupt();
         playerThread.interrupt();
     }
@@ -176,7 +175,7 @@ public class Player implements Runnable {
      * @param slot - the slot corresponding to the key pressed.
      */
     public void keyPressed(int slot) {
-        this.keyQueue.add(slot);
+        try{this.keyQueue.put(slot);}catch(InterruptedException ignored){}
     }
 
     /**
