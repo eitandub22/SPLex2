@@ -3,7 +3,11 @@ package bguspl.set.ex;
 import bguspl.set.Env;
 import bguspl.set.ThreadLogger;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+import java.util.ArrayList;
 import java.util.concurrent.Semaphore;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -70,7 +74,7 @@ public class Dealer implements Runnable {
             removeAllCardsFromTable();
         }
         announceWinners();
-
+        terminate();
         for(Player p : players){
             try{this.playerThreads[p.id].join();} catch (InterruptedException e){}
         }

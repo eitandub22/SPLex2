@@ -4,11 +4,7 @@ import bguspl.set.Env;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.LinkedList;
-import java.util.Queue;
 import java.util.Random;
-import java.util.logging.Level;
-
 /**
  * This class manages the players' threads and data
  *

@@ -4,6 +4,7 @@ import bguspl.set.Env;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -231,6 +232,7 @@ public class Table {
     public void placeCards(List<Integer> cards){
         synchronized(this.cardsLock){
             List<Integer> spots = getEmptySlots();
+            Collections.shuffle(spots);
             while(!spots.isEmpty() && !cards.isEmpty()){
                 placeCard(cards.remove(0), spots.remove(0));
             }
