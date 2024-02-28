@@ -12,13 +12,19 @@ with a short description of:
 
 1. Fully supporting all configuration fields and avoiding the use of magic numbers
 
-We are not entitled to this bonus.
+1. There is none but a few magic numbers in our code, but those are time related (i.e 1000 miliseconds for a second)
+ in general all configuration settings are supported and the code was written in such way to support general settings
+2. Refering to feture size as a size of set, refering to the time settings from config file and not using magic numbers,
+ refering to table size for number of slots on table.
+3. used differant settings and made sure the game ran smoothly
 
 --------------------
 
 2. Terminating all threads (that you created) gracefully and in reverse order to the order they were created in.
 
-We are not entitled to this bonus.
+in player, the thread joins UI thread before terminating. in dealer, th thread joins all players threads before terminating.
+in the logs you can see the order of thread terminating.
+
 
 --------------------
 
@@ -27,7 +33,7 @@ config.turnTimeoutMillis < 0: display nothing.
 config.turnTimeoutMillis = 0: display a timer since the last action (reshuffle or set collected).
 Note: in modes without a countdown timer the dealer must ensure there is always at least one legal set on the table.
 
-We are not entitled to this bonus.
+We are not entitled to this bonus. :(
 
 --------------------
 
@@ -35,4 +41,11 @@ We are not entitled to this bonus.
 changed on the display, key input needs to be handled, etc.) and the only threads created by you are:
 1 thread per player + 1 additional thread for non-human players.
 
-We are not entitled to this bonus.
+we made sure to not use another thread other than the ones given to us in the skeleton files as requested.
+
+we made sure that when a player waits for dealer respons, he waits on his thread object, and so
+the dealer can wake up each player individualy when he finished dealing with them.
+the AI waits on the player object and not the   Bloking queue, and so only wakes up when player tells it to,
+specificly after a key was taken from the queue.
+lastly, the dealer only wakes up when a players asks for a check on his sets, by using a queue of players,
+each player in the queue is waiting for dealer to check them and so dealer wont wake up for nothing(unless it timeout)
